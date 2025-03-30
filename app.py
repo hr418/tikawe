@@ -26,7 +26,7 @@ def create():
     password_hash = generate_password_hash(password1)
 
     # Check if username contains more than one consequtive space, space as the first character, space as the last character, or illegal characters
-    if re.match(r".*\s{2,}|^ | $", username) or not re.fullmatch(r"[\w ]+", username):
+    if re.search(r"\s{2,}|^ | $", username) or not re.fullmatch(r"[\w ]+", username):
         return render_template("message.html", title="Virhe", redirect_text="Takaisin", message="Tunnus ei kelpaa.", redirect="/register")
 
     if len(password1) < 8:
