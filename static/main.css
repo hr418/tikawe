@@ -23,13 +23,13 @@ body {
   margin: 0;
 }
 
-.nav {
+.header {
   border-bottom: 1px solid gray;
   display: flex;
   justify-content: center;
 }
 
-.nav__content {
+.nav {
   display: flex;
   gap: 2rem;
   flex-direction: row;
