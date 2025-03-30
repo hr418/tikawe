@@ -1,0 +1,16 @@
+{% if session.username %}
+<nav class="nav">
+  <div class="nav__content">
+    <a class="nav__logo" href="/">Tapahtumakalenteri</a>
+    <a href="/logout">Kirjaudu ulos</a>
+    <a href="/user">{{ session.username }}</a>
+  </div>
+</nav>
+{% else %}
+<nav class="nav">
+  <div class="nav__content">
+    <a class="nav__logo" href="/">Tapahtumakalenteri</a>
+    <a href="/register">Uusi käyttäjä</a>
+  </div>
+</nav>
+{% endif %}

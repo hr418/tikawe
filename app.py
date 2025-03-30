@@ -4,13 +4,14 @@ from flask import Flask, render_template, request, session, redirect
 from werkzeug.security import generate_password_hash, check_password_hash
 import config
 import db
+import event_calendar
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
 
 @app.route("/")
 def index():
-    return render_template("index.html", message="")
+    return render_template("index.html", events=event_calendar.get_events())
 
 @app.route("/register")
 def register():
@@ -44,11 +45,15 @@ def create():
 def login():
     username = request.form["username"]
     password = request.form["password"]
-    
-    sql = "SELECT password_hash FROM users WHERE username = ?"
-    password_hash = db.query(sql, [username])[0][0]
 
-    if check_password_hash(password_hash, password):
+    sql = "SELECT password_hash FROM users WHERE username = ?"
+    
+    result = db.query(sql, [username])
+
+    if not result:
+        return render_template("message.html", title="Virhe", redirect_text="Takaisin", message="Väärä tunnus tai salasana.", redirect="/")
+
+    if check_password_hash(result[0][0], password):
         session["username"] = username
         return redirect("/")
 

@@ -6,12 +6,7 @@
   </head>
 
   <body>
-    <nav class="nav">
-      <div class="nav__content">
-        <a class="nav__logo" href="/">Tapahtumakalenteri</a>
-        <a href="/register">Uusi käyttäjä</a>
-      </div>
-    </nav>
+    {% include "nav.html" %}
     <main class="main">
       <div class="main__content">
         <form action="/create" method="post" class="form">

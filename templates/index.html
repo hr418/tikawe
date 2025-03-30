@@ -10,24 +10,11 @@
   </head>
 
   <body>
-    {% if session.username %}
-    <nav class="nav">
-      <div class="nav__content">
-        <a class="nav__logo" href="/">Tapahtumakalenteri</a>
-        <a href="/user">{{ session.username }}</a>
-        <a href="/logout">Kirjaudu ulos</a>
-      </div>
-    </nav>
+    {% if session.username %} {% include "nav.html" %}
     <main class="main">
       <div class="main__content"></div>
     </main>
-    {% else %}
-    <nav class="nav">
-      <div class="nav__content">
-        <a class="nav__logo" href="/">Tapahtumakalenteri</a>
-        <a href="/register">Uusi käyttäjä</a>
-      </div>
-    </nav>
+    {% else %} {% include "nav.html" %}
     <main class="main">
       <div class="main__content">
         <form action="/login" method="post" class="form">
