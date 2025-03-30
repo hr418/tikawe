@@ -2,25 +2,44 @@
 <html>
   <head>
     <title>Rekisteröinti</title>
+    <link rel="stylesheet" href="static/main.css" />
   </head>
 
   <body>
-    <form action="/create" method="post">
-      <p>Tunnus voi sisältää kirjaimia, numeroita, alaviivoja sekä välilyöntejä.</p>
-      <p>
-        Tunnus: <br />
-        <input type="text" name="username" />
-      </p>
-      <p>Salasanan täytyy olla vähintään 8 merkkiä.</p>
-      <p>
-        Salasana: <br />
-        <input type="password" name="password1" />
-      </p>
-      <p>
-        Salasana uudestaan: <br />
-        <input type="password" name="password2" />
-      </p>
-      <input type="submit" value="Luo tunnus" />
-    </form>
+    <nav class="nav">
+      <div class="nav__content">
+        <a class="nav__logo" href="/">Tapahtumakalenteri</a>
+        <a href="/register">Uusi käyttäjä</a>
+      </div>
+    </nav>
+    <main class="main">
+      <div class="main__content">
+        <form action="/create" method="post" class="form">
+          <div>
+            <p class="form__requirement">
+              Tunnus voi sisältää kirjaimia, numeroita, alaviivoja sekä välilyöntejä.
+            </p>
+            <p class="form__requirement">Salasanan täytyy olla vähintään 8 merkkiä.</p>
+          </div>
+
+          <div>
+            <label for="username">Tunnus:</label> <br />
+            <input type="text" name="username" id="username" />
+          </div>
+
+          <div>
+            <label for="password1">Salasana:</label> <br />
+            <input type="password" name="password1" id="password1" />
+          </div>
+
+          <div>
+            <label for="password2">Salasana uudestaan:</label> <br />
+            <input type="password" name="password2" id="password2" />
+          </div>
+
+          <input type="submit" value="Luo tunnus" />
+        </form>
+      </div>
+    </main>
   </body>
 </html>

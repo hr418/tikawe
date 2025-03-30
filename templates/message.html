@@ -2,11 +2,32 @@
 <html>
   <head>
     <title>{{ title }}</title>
+    <link rel="stylesheet" href="/static/main.css" />
   </head>
 
   <body>
-    <h1>{{ title }}</h1>
-    <p>{{ message }}</p>
-    <a href="{{ redirect }}">{{ redirect_text}}</a>
+    {% if session.username %}
+    <nav class="nav">
+      <div class="nav__content">
+        <a class="nav__logo" href="/">Tapahtumakalenteri</a>
+        <a href="/user">{{ session.username }}</a>
+        <a href="/logout">Kirjaudu ulos</a>
+      </div>
+    </nav>
+    {% else %}
+    <nav class="nav">
+      <div class="nav__content">
+        <a class="nav__logo" href="/">Tapahtumakalenteri</a>
+        <a href="/register">Uusi käyttäjä</a>
+      </div>
+    </nav>
+    {% endif %}
+    <main class="main">
+      <div class="main__content">
+        <h1>{{ title }}</h1>
+        <p>{{ message }}</p>
+        <a href="{{ redirect }}">{{ redirect_text}}</a>
+      </div>
+    </main>
   </body>
 </html>

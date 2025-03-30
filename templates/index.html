@@ -1,27 +1,48 @@
 <!DOCTYPE html>
 <html>
   <head>
+    {% if session.username %}
+    <title>Tapahtumakalenteri</title>
+    {% else %}
     <title>Kirjautuminen</title>
+    {% endif %}
+    <link rel="stylesheet" href="static/main.css" />
   </head>
 
   <body>
     {% if session.username %}
-    <p>Olet kirjautunut nimellä {{ session.username }}</p>
-    <p>
-      <a href="/logout">Kirjaudu ulos</a>
-    </p>
+    <nav class="nav">
+      <div class="nav__content">
+        <a class="nav__logo" href="/">Tapahtumakalenteri</a>
+        <a href="/user">{{ session.username }}</a>
+        <a href="/logout">Kirjaudu ulos</a>
+      </div>
+    </nav>
+    <main class="main">
+      <div class="main__content"></div>
+    </main>
     {% else %}
-    <form action="/login" method="post">
-      <p>
-        Tunnus: <br />
-        <input type="text" name="username" />
-      </p>
-      <p>
-        Salasana: <br />
-        <input type="password" name="password" />
-      </p>
-      <input type="submit" value="Kirjaudu" />
-    </form>
+    <nav class="nav">
+      <div class="nav__content">
+        <a class="nav__logo" href="/">Tapahtumakalenteri</a>
+        <a href="/register">Uusi käyttäjä</a>
+      </div>
+    </nav>
+    <main class="main">
+      <div class="main__content">
+        <form action="/login" method="post" class="form">
+          <div>
+            <label for="username">Tunnus:</label> <br />
+            <input type="text" name="username" id="username" />
+          </div>
+          <div>
+            <label for="password">Salasana:</label> <br />
+            <input type="password" name="password" id="password" />
+          </div>
+          <input type="submit" value="Kirjaudu" />
+        </form>
+      </div>
+    </main>
     {% endif %}
   </body>
 </html>
