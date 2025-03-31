@@ -2,7 +2,7 @@
 <html>
   <head>
     <title>Rekisteröinti</title>
-    <link rel="stylesheet" href="static/main.css" />
+    <link rel="stylesheet" href="/static/main.css" />
   </head>
 
   <body>
@@ -18,17 +18,18 @@
           </div>
 
           <div>
-            <label for="username">Tunnus:</label> <br />
+            <label for="username">Tunnus: <span class="form__required">*</span></label> <br />
             <input type="text" name="username" id="username" />
           </div>
 
           <div>
-            <label for="password1">Salasana:</label> <br />
+            <label for="password1">Salasana: <span class="form__required">*</span></label> <br />
             <input type="password" name="password1" id="password1" />
           </div>
 
           <div>
-            <label for="password2">Salasana uudestaan:</label> <br />
+            <label for="password2">Salasana uudestaan: <span class="form__required">*</span></label>
+            <br />
             <input type="password" name="password2" id="password2" />
           </div>
 

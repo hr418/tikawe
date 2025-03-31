@@ -6,13 +6,58 @@
     {% else %}
     <title>Kirjautuminen</title>
     {% endif %}
-    <link rel="stylesheet" href="static/main.css" />
+    <link rel="stylesheet" href="/static/main.css" />
   </head>
 
   <body>
     {% if session.username %} {% include "nav.html" %}
     <main class="main">
-      <div class="main__content"></div>
+      <div class="main__content">
+        {% if not events %}
+        <p>Ei tapahtumia.</p>
+        {% endif %}
+        <ul class="event-items">
+          {% for event in events %} {% if event.is_canceled %}
+          <li class="event-item--canceled">
+            <div class="event-item-main-info">
+              <p class="event-item-main-info__date">{{ event.date }}</p>
+              <div class="event-item-text">
+                <a href="/" class="event-item-text__title">{{ event.title }}</a>
+                <p class="event-item-text__description">{{ event.description}}</p>
+              </div>
+            </div>
+            <div class="event-item-secondary-info">
+              <p>{{ event.username }}</p>
+              <p>{{ event.duration }}</p>
+              <p>{{ event.spots }}</p>
+              {% if session.username == event.username %}
+              <a href="/edit/{{ event.id }}">Muokkaa</a>
+              <a href="/delete/{{ event.id }}">Poista</a>
+              {% endif %}
+            </div>
+          </li>
+          {% else %}
+          <li class="event-item">
+            <div class="event-item-main-info">
+              <p class="event-item-main-info__date">{{ event.date }}</p>
+              <div class="event-item-text">
+                <a href="/" class="event-item-text__title">{{ event.title }}</a>
+                <p class="event-item-text__description">{{ event.description}}</p>
+              </div>
+            </div>
+            <div class="event-item-secondary-info">
+              <p>{{ event.username }}</p>
+              <p>{{ event.duration }}</p>
+              <p>{{ event.spots }}</p>
+              {% if session.username == event.username %}
+              <a href="/edit/{{ event.id }}">Muokkaa</a>
+              <a href="/delete/{{ event.id }}">Poista</a>
+              {% endif %}
+            </div>
+          </li>
+          {% endif%} {% endfor %}
+        </ul>
+      </div>
     </main>
     {% else %} {% include "nav.html" %}
     <main class="main">

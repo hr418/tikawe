@@ -9,7 +9,7 @@ body {
 }
 
 .main__content {
-  max-width: 60rem;
+  max-width: 50rem;
   flex-grow: 1;
   margin: 1rem;
 }
@@ -23,10 +23,17 @@ body {
   margin: 0;
 }
 
+.form__required {
+  color: red;
+}
+
 .header {
-  border-bottom: 1px solid gray;
+  border-bottom: 1px solid lightgray;
   display: flex;
   justify-content: center;
+  position: sticky;
+  top: 0;
+  background-color: white;
 }
 
 .nav {
@@ -37,9 +44,59 @@ body {
   max-width: 60rem;
   flex-grow: 1;
   margin-inline: 1rem;
-  margin-block: 0.5rem;
+  margin-block: 1rem;
 }
 
 .nav__logo {
   margin-right: auto;
+}
+
+.event-items {
+  list-style: none;
+}
+
+.event-item {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 2rem;
+}
+
+.event-item-main-info {
+  display: flex;
+}
+
+.event-item-secondary-info {
+  display: flex;
+  justify-content: space-between;
+  color: gray;
+}
+
+.event-item-secondary-info > * {
+  margin: 0;
+}
+
+.event-item-main-info__date {
+  font-size: 4rem;
+  margin: 0;
+}
+
+.event-item-text {
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  min-width: 0;
+}
+
+.event-item-text__title {
+  font-size: 1.5rem;
+  margin: 0;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.event-item-text__description {
+  margin: 0;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
