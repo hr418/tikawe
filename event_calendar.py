@@ -19,7 +19,7 @@ def add_event(title, description, start, end, spots):
     db.execute(sql, [user_id, title, description, start, end, spots])
 
 def edit_event(event_id, title, description, start, end, spots):
-    sql = "UPDATE Events SET title = ? AND description = ? AND start = ? AND end = ? AND spots = ? WHERE id = ?"
+    sql = "UPDATE Events SET title = ?, description = ?, start = ?, end = ?, spots = ? WHERE id = ?"
     db.execute(sql, [title, description, start, end, spots, event_id])
  
 def delete_event(event_id):
