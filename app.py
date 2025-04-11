@@ -12,6 +12,9 @@ app.secret_key = config.SECRET_KEY
 
 @app.route("/")
 def index():
+    if "username" not in session:
+        return redirect("/login")
+
     def event_formatter(event):
         start = datetime.fromtimestamp(event["start"])
         end = datetime.fromtimestamp(event["end"])
@@ -29,6 +32,32 @@ def index():
         return result
     
     return render_template("index.html", events=map(event_formatter, event_calendar.get_events()))
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "GET":
+        return render_template("login.html")
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+
+        sql = "SELECT password_hash FROM users WHERE username = ?"
+
+        result = db.query(sql, [username])
+
+        if not result:
+            return render_template("message.html", title="Virhe", redirect_text="Takaisin", message="Väärä tunnus tai salasana.", redirect="/")
+
+        if check_password_hash(result[0][0], password):
+            session["username"] = username
+            return redirect("/")
+
+        return render_template("message.html", title="Virhe", redirect_text="Takaisin", message="Väärä tunnus tai salasana.", redirect="/")
+
+@app.route("/logout")
+def logout():
+    del session["username"]
+    return redirect("/")
 
 @app.route("/register")
 def register():
@@ -63,29 +92,6 @@ def create():
         return render_template("message.html", title="Virhe", redirect_text="Takaisin", message="Tunnus on jo olemassa.", redirect="/register")
 
     return render_template("message.html", title="Onnistui", redirect_text="Etusivulle", message="Käyttäjä luotu.", redirect="/")
-
-@app.route("/login", methods=["POST"])
-def login():
-    username = request.form["username"]
-    password = request.form["password"]
-
-    sql = "SELECT password_hash FROM users WHERE username = ?"
-    
-    result = db.query(sql, [username])
-
-    if not result:
-        return render_template("message.html", title="Virhe", redirect_text="Takaisin", message="Väärä tunnus tai salasana.", redirect="/")
-
-    if check_password_hash(result[0][0], password):
-        session["username"] = username
-        return redirect("/")
-
-    return render_template("message.html", title="Virhe", redirect_text="Takaisin", message="Väärä tunnus tai salasana.", redirect="/")
-
-@app.route("/logout")
-def logout():
-    del session["username"]
-    return redirect("/")
 
 @app.route("/new_event", methods=["GET", "POST"])
 def new_event():

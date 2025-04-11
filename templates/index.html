@@ -10,7 +10,7 @@
   </head>
 
   <body>
-    {% if session.username %} {% include "nav.html" %}
+    {% include "nav.html" %}
     <main class="main">
       <div class="main__content">
         {% if not events %}
@@ -59,22 +59,5 @@
         </ul>
       </div>
     </main>
-    {% else %} {% include "nav.html" %}
-    <main class="main">
-      <div class="main__content">
-        <form action="/login" method="post" class="form">
-          <div>
-            <label for="username">Tunnus:</label> <br />
-            <input type="text" name="username" id="username" />
-          </div>
-          <div>
-            <label for="password">Salasana:</label> <br />
-            <input type="password" name="password" id="password" />
-          </div>
-          <input type="submit" value="Kirjaudu" />
-        </form>
-      </div>
-    </main>
-    {% endif %}
   </body>
 </html>
