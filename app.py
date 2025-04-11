@@ -6,6 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import config
 import db
 import event_calendar
+import utils
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
@@ -15,23 +16,7 @@ def index():
     if "username" not in session:
         return redirect("/login")
 
-    def event_formatter(event):
-        start = datetime.fromtimestamp(event["start"])
-        end = datetime.fromtimestamp(event["end"])
-
-        result = {}
-        result["id"] = event["id"]
-        result["title"] = event["title"]
-        result["description"] = event["description"]
-        result["username"] = event["username"]
-        result["is_canceled"] = event["isCanceled"]
-        result["spots"] = f"{event["registeredCount"]} / {event["spots"]} ilmoittautunut" if event["spots"] else f"{event["registeredCount"]} ilmoittautunut"
-        result["date"] = f"{start.day}.{start.month}"
-        result["duration"] = f"{start.strftime("%d/%m/%Y %H:%M")} - {end.strftime("%d/%m/%Y %H:%M")}"
-
-        return result
-    
-    return render_template("index.html", events=map(event_formatter, event_calendar.get_events()))
+    return render_template("index.html", events=map(utils.event_formatter, event_calendar.get_events()))
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
