@@ -15,12 +15,12 @@
       <div class="main__content">
         <form action="/login" method="post" class="form">
           <div>
-            <label for="username">Tunnus:</label> <br />
-            <input type="text" name="username" id="username" />
+            <label for="username">Tunnus: <span class="form__required">*</span></label> <br />
+            <input required type="text" name="username" id="username" />
           </div>
           <div>
-            <label for="password">Salasana:</label> <br />
-            <input type="password" name="password" id="password" />
+            <label for="password">Salasana: <span class="form__required">*</span></label> <br />
+            <input required type="password" name="password" id="password" />
           </div>
           <input type="submit" value="Kirjaudu" />
         </form>
