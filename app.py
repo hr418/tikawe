@@ -82,70 +82,36 @@ def create():
 def new_event():
     if request.method == "GET":
         return render_template("new_event.html")
-    
-    title = request.form["title"]
-    description = request.form["description"]
-    start_date = request.form["start_date"]
-    start_time = request.form["start_time"]
-    end_date = request.form["end_date"]
-    end_time = request.form["end_time"]
-    spots = request.form["spots"]
 
-    if not title or not description or not start_date or not start_time or not end_date or not end_time:
-        return render_template("message.html", title="Virhe", redirect_text="Takaisin", message="Varmista että kaikki pakolliset kentät ovat täytetty.", redirect="/new_event")
-    
-    start = datetime.strptime(f"{start_date} {start_time}", "%Y-%m-%d %H:%M").timestamp()
-    end = datetime.strptime(f"{end_date} {end_time}", "%Y-%m-%d %H:%M").timestamp()
+    if request.method == "POST":
+        form = utils.event_form_handler(request.form)
 
-    if start < datetime.now().timestamp():
-        return render_template("message.html", title="Virhe", redirect_text="Takaisin", message="Tapahtuma ei voi alkaa menneisyydessä.", redirect="/new_event")
-    
-    if end <= start:
-        return render_template("message.html", title="Virhe", redirect_text="Takaisin", message="Tapahtuma ei voi luppua, sen jälkeen kun se on alkanut.", redirect="/new_event")
-    
-    spots = None if not spots else int(spots)
+        if form["error"]:
+            return render_template("message.html", title="Virhe", redirect_text="Takaisin", message=form["error"], redirect="/new_event")
 
-    try:
-        event_calendar.add_event(title, description, start, end, spots)
-    except sqlite3.Error:
-        return render_template("message.html", title="Virhe", redirect_text="Takaisin", message="Jokin meni pieleen.", redirect="/new_event")
-    
-    return render_template("message.html", title="Onnistui", redirect_text="Etusivulle", message="Tapahtuma luotu.", redirect="/")
-    
+        try:
+            event_calendar.add_event(form["title"], form["description"], form["start_epoch"], form["end_epoch"], form["spots"])
+        except sqlite3.Error:
+            return render_template("message.html", title="Virhe", redirect_text="Takaisin", message="Tuntemattomasta syystä, tapahtumaa ei voitu lisätä tietokantaan.", redirect="/new_event")
+        return render_template("message.html", title="Onnistui", redirect_text="Etusivulle", message="Tapahtuma luotu.", redirect="/")
+
 @app.route("/edit/<int:event_id>", methods=["GET", "POST"])
 def edit_event(event_id):
     if request.method == "GET":
         return render_template("edit_event.html", event_id=event_id)
 
     if request.method == "POST":
-        title = request.form["title"]
-        description = request.form["description"]
-        start_date = request.form["start_date"]
-        start_time = request.form["start_time"]
-        end_date = request.form["end_date"]
-        end_time = request.form["end_time"]
-        spots = request.form["spots"]
+        form = utils.event_form_handler(request.form)
 
-        if not title or not description or not start_date or not start_time or not end_date or not end_time:
-            return render_template("message.html", title="Virhe", redirect_text="Takaisin", message="Varmista että kaikki pakolliset kentät ovat täytetty.", redirect=f"/edit/{event_id}")
-
-        start = datetime.strptime(f"{start_date} {start_time}", "%Y-%m-%d %H:%M").timestamp()
-        end = datetime.strptime(f"{end_date} {end_time}", "%Y-%m-%d %H:%M").timestamp()
-
-        if start < datetime.now().timestamp():
-            return render_template("message.html", title="Virhe", redirect_text="Takaisin", message="Tapahtuma ei voi alkaa menneisyydessä.", redirect=f"/edit/{event_id}")
-
-        if end <= start:
-            return render_template("message.html", title="Virhe", redirect_text="Takaisin", message="Tapahtuma ei voi luppua, sen jälkeen kun se on alkanut.", redirect=f"/edit/{event_id}")
-        
-        spots = None if not spots else int(spots)
+        if form["error"]:
+            return render_template("message.html", title="Virhe", redirect_text="Takaisin", message=form["error"], redirect="/new_event")
 
         try:
-            event_calendar.edit_event(event_id, title, description, start, end, spots)
+            event_calendar.edit_event(event_id, form["title"], form["description"], form["start_epoch"], form["end_epoch"], form["spots"])
         except sqlite3.Error:
-            return render_template("message.html", title="Virhe", redirect_text="Takaisin", message="Jokin meni pieleen.", redirect=f"/edit/{event_id}")
+            return render_template("message.html", title="Virhe", redirect_text="Takaisin", message="Tuntemattomasta syystä, tapahtumaa ei voitu päivittää tietokantaan.", redirect=f"/edit/{event_id}")
 
-        return render_template("message.html", title="Onnistui", redirect_text="Etusivulle", message="Tapahtuma muokattu.", redirect="/")
+        return render_template("message.html", title="Onnistui", redirect_text="Etusivulle", message="Tapahtuma päivitetty.", redirect="/")
 
 @app.route("/delete/<int:event_id>", methods=["GET", "POST"])
 def delete(event_id):
