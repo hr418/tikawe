@@ -29,6 +29,15 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
 
+        if not username or not password:
+            return render_template(
+                "message.html",
+                title="Virhe",
+                redirect_text="Takaisin",
+                message="Kaikki kentät ovat pakollisia.",
+                redirect="/login",
+            )
+
         sql = "SELECT password_hash FROM users WHERE username = ?"
 
         result = db.query(sql, [username])
