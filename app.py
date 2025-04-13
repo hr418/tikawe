@@ -6,7 +6,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import config
 import db
 import event_calendar
-import utils
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
@@ -37,7 +36,8 @@ def index():
         return redirect("/login")
 
     return render_template(
-        "index.html", events=map(utils.event_formatter, event_calendar.get_events())
+        "index.html",
+        events=map(event_calendar.event_formatter, event_calendar.get_events()),
     )
 
 
@@ -219,7 +219,7 @@ def new_event():
         return render_template("new_event.html")
 
     if request.method == "POST":
-        form = utils.event_form_handler(request.form)
+        form = event_calendar.event_form_handler(request.form)
 
         if form["error"]:
             return (
@@ -292,7 +292,7 @@ def edit_event(event_id):
         return render_template("edit_event.html", event_id=event_id)
 
     if request.method == "POST":
-        form = utils.event_form_handler(request.form)
+        form = event_calendar.event_form_handler(request.form)
 
         if form["error"]:
             return (
