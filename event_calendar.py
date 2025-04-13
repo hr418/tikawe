@@ -36,7 +36,7 @@ def delete_event(event_id):
 
 
 # Formats event attributes for display
-def event_formatter(event):
+def format_event_display(event):
     start = datetime.fromtimestamp(event["start"])
     end = datetime.fromtimestamp(event["end"])
 
@@ -55,6 +55,24 @@ def event_formatter(event):
     result["duration"] = (
         f"{start.strftime("%d/%m/%Y %H:%M")} - {end.strftime("%d/%m/%Y %H:%M")}"
     )
+
+    return result
+
+
+# Formats event attributes to be used as values in html form
+def format_event_form(event):
+    start = datetime.fromtimestamp(event["start"])
+    end = datetime.fromtimestamp(event["end"])
+
+    result = {}
+    result["id"] = event["id"]
+    result["title"] = event["title"]
+    result["description"] = event["description"]
+    result["spots"] = event["spots"]
+    result["start_date"] = start.strftime("%Y-%m-%d")
+    result["start_time"] = start.strftime("%H:%M")
+    result["end_date"] = end.strftime("%Y-%m-%d")
+    result["end_time"] = end.strftime("%H:%M")
 
     return result
 

@@ -3,6 +3,10 @@ body {
   margin: 0;
 }
 
+.abc {
+  max-width: 100%;
+}
+
 .main {
   display: flex;
   justify-content: center;
@@ -21,6 +25,10 @@ body {
 .form__requirement {
   padding: 0;
   margin: 0;
+}
+
+.form__textarea {
+  max-width: 100%;
 }
 
 .form__required {

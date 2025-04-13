@@ -37,7 +37,7 @@ def index():
 
     return render_template(
         "index.html",
-        events=map(event_calendar.event_formatter, event_calendar.get_events()),
+        events=map(event_calendar.format_event_display, event_calendar.get_events()),
     )
 
 
@@ -289,7 +289,11 @@ def edit_event(event_id):
             403,
         )
     if request.method == "GET":
-        return render_template("edit_event.html", event_id=event_id)
+
+        return render_template(
+            "edit_event.html",
+            event=event_calendar.format_event_form(event),
+        )
 
     if request.method == "POST":
         form = event_calendar.event_form_handler(request.form)
