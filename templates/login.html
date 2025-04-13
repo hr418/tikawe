@@ -12,11 +12,11 @@
         <form action="/login" method="post" class="form">
           <div>
             <label for="username">Tunnus: <span class="form__required">*</span></label> <br />
-            <input required type="text" name="username" id="username" />
+            <input maxlength="30" required type="text" name="username" id="username" />
           </div>
           <div>
             <label for="password">Salasana: <span class="form__required">*</span></label> <br />
-            <input required type="password" name="password" id="password" />
+            <input maxlength="30" required type="password" name="password" id="password" />
           </div>
           <input type="submit" value="Kirjaudu" />
         </form>
