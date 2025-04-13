@@ -16,12 +16,15 @@ def require_login(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if "user_id" not in session:
-            return render_template(
-                "message.html",
-                title="Virhe",
-                redirect_text="Kirjaudu",
-                message="Et ole kirjautunut sisään.",
-                redirect="/login",
+            return (
+                render_template(
+                    "message.html",
+                    title="Virhe",
+                    redirect_text="Kirjaudu",
+                    message="Et ole kirjautunut sisään.",
+                    redirect="/login",
+                ),
+                401,
             )
         return f(*args, **kwargs)
 
@@ -47,12 +50,15 @@ def login():
         password = request.form["password"]
 
         if not username or not password:
-            return render_template(
-                "message.html",
-                title="Virhe",
-                redirect_text="Takaisin",
-                message="Kaikki kentät ovat pakollisia.",
-                redirect="/login",
+            return (
+                render_template(
+                    "message.html",
+                    title="Virhe",
+                    redirect_text="Takaisin",
+                    message="Kaikki kentät ovat pakollisia.",
+                    redirect="/login",
+                ),
+                400,
             )
 
         sql = "SELECT password_hash FROM users WHERE username = ?"
@@ -60,12 +66,15 @@ def login():
         result = db.query(sql, [username])
 
         if not result:
-            return render_template(
-                "message.html",
-                title="Virhe",
-                redirect_text="Takaisin",
-                message="Väärä tunnus tai salasana.",
-                redirect="/",
+            return (
+                render_template(
+                    "message.html",
+                    title="Virhe",
+                    redirect_text="Takaisin",
+                    message="Väärä tunnus tai salasana.",
+                    redirect="/",
+                ),
+                401,
             )
 
         if check_password_hash(result[0][0], password):
@@ -76,12 +85,15 @@ def login():
             session["username"] = username
             return redirect("/")
 
-        return render_template(
-            "message.html",
-            title="Virhe",
-            redirect_text="Takaisin",
-            message="Väärä tunnus tai salasana.",
-            redirect="/",
+        return (
+            render_template(
+                "message.html",
+                title="Virhe",
+                redirect_text="Takaisin",
+                message="Väärä tunnus tai salasana.",
+                redirect="/",
+            ),
+            401,
         )
 
 
@@ -103,57 +115,75 @@ def register():
         password2 = request.form["password2"]
 
         if not username or not password1 or not password2:
-            return render_template(
-                "message.html",
-                title="Virhe",
-                redirect_text="Takaisin",
-                message="Kaikki kentät ovat pakollisia.",
-                redirect="/register",
+            return (
+                render_template(
+                    "message.html",
+                    title="Virhe",
+                    redirect_text="Takaisin",
+                    message="Kaikki kentät ovat pakollisia.",
+                    redirect="/register",
+                ),
+                400,
             )
 
         if password1 != password2:
-            return render_template(
-                "message.html",
-                title="Virhe",
-                redirect_text="Takaisin",
-                message="Salasanat eivät täsmää.",
-                redirect="/register",
+            return (
+                render_template(
+                    "message.html",
+                    title="Virhe",
+                    redirect_text="Takaisin",
+                    message="Salasanat eivät täsmää.",
+                    redirect="/register",
+                ),
+                400,
             )
 
         if len(password1) < 8:
-            return render_template(
-                "message.html",
-                title="Virhe",
-                redirect_text="Takaisin",
-                message="Salasana ei ole tarpeeksi pitkä.",
-                redirect="/register",
+            return (
+                render_template(
+                    "message.html",
+                    title="Virhe",
+                    redirect_text="Takaisin",
+                    message="Salasana ei ole tarpeeksi pitkä.",
+                    redirect="/register",
+                ),
+                400,
             )
         if len(password1) > 30:
-            return render_template(
-                "message.html",
-                title="Virhe",
-                redirect_text="Takaisin",
-                message="Salasana ei voi olla pidempi kuin 30 merkkiä.",
-                redirect="/register",
+            return (
+                render_template(
+                    "message.html",
+                    title="Virhe",
+                    redirect_text="Takaisin",
+                    message="Salasana ei voi olla pidempi kuin 30 merkkiä.",
+                    redirect="/register",
+                ),
+                400,
             )
         if len(username) > 30:
-            return render_template(
-                "message.html",
-                title="Virhe",
-                redirect_text="Takaisin",
-                message="Tunnus ei voi olla pidempi kuin 30 merkkiä.",
-                redirect="/register",
+            return (
+                render_template(
+                    "message.html",
+                    title="Virhe",
+                    redirect_text="Takaisin",
+                    message="Tunnus ei voi olla pidempi kuin 30 merkkiä.",
+                    redirect="/register",
+                ),
+                400,
             )
         # Check if username contains more than one consequtive space, space as the first character, space as the last character, or illegal characters
         if re.search(r"\s{2,}|^ | $", username) or not re.fullmatch(
             r"[\w ]+", username
         ):
-            return render_template(
-                "message.html",
-                title="Virhe",
-                redirect_text="Takaisin",
-                message="Tunnus ei kelpaa.",
-                redirect="/register",
+            return (
+                render_template(
+                    "message.html",
+                    title="Virhe",
+                    redirect_text="Takaisin",
+                    message="Tunnus ei kelpaa.",
+                    redirect="/register",
+                ),
+                400,
             )
 
         password_hash = generate_password_hash(password1)
@@ -162,12 +192,15 @@ def register():
             sql = "INSERT INTO users (username, password_hash) VALUES (?, ?)"
             db.execute(sql, [username, password_hash])
         except sqlite3.IntegrityError:
-            return render_template(
-                "message.html",
-                title="Virhe",
-                redirect_text="Takaisin",
-                message="Tunnus on jo olemassa.",
-                redirect="/register",
+            return (
+                render_template(
+                    "message.html",
+                    title="Virhe",
+                    redirect_text="Takaisin",
+                    message="Tunnus on jo olemassa.",
+                    redirect="/register",
+                ),
+                409,
             )
 
         return render_template(
@@ -189,12 +222,15 @@ def new_event():
         form = utils.event_form_handler(request.form)
 
         if form["error"]:
-            return render_template(
-                "message.html",
-                title="Virhe",
-                redirect_text="Takaisin",
-                message=form["error"],
-                redirect="/new_event",
+            return (
+                render_template(
+                    "message.html",
+                    title="Virhe",
+                    redirect_text="Takaisin",
+                    message=form["error"],
+                    redirect="/new_event",
+                ),
+                400,
             )
 
         try:
@@ -206,12 +242,15 @@ def new_event():
                 form["spots"],
             )
         except sqlite3.Error:
-            return render_template(
-                "message.html",
-                title="Virhe",
-                redirect_text="Takaisin",
-                message="Tuntemattomasta syystä, tapahtumaa ei voitu lisätä tietokantaan.",
-                redirect="/new_event",
+            return (
+                render_template(
+                    "message.html",
+                    title="Virhe",
+                    redirect_text="Takaisin",
+                    message="Tuntemattomasta syystä, tapahtumaa ei voitu lisätä tietokantaan.",
+                    redirect="/new_event",
+                ),
+                500,
             )
         return render_template(
             "message.html",
@@ -228,20 +267,26 @@ def edit_event(event_id):
     event = event_calendar.get_event(event_id)
 
     if not event:
-        return render_template(
-            "message.html",
-            title="Virhe",
-            redirect_text="Takaisin",
-            message="Tapahtuma on poistettu tai sitä ei ole olemassa.",
-            redirect="/",
+        return (
+            render_template(
+                "message.html",
+                title="Virhe",
+                redirect_text="Takaisin",
+                message="Tapahtuma on poistettu tai sitä ei ole olemassa.",
+                redirect="/",
+            ),
+            404,
         )
     if event["user"] != session["user_id"]:
-        return render_template(
-            "message.html",
-            title="Virhe",
-            redirect_text="Takaisin",
-            message="Sinulla ei ole oikeuksia muokata tätä tapahtumaa.",
-            redirect="/",
+        return (
+            render_template(
+                "message.html",
+                title="Virhe",
+                redirect_text="Takaisin",
+                message="Sinulla ei ole oikeuksia muokata tätä tapahtumaa.",
+                redirect="/",
+            ),
+            403,
         )
     if request.method == "GET":
         return render_template("edit_event.html", event_id=event_id)
@@ -250,12 +295,15 @@ def edit_event(event_id):
         form = utils.event_form_handler(request.form)
 
         if form["error"]:
-            return render_template(
-                "message.html",
-                title="Virhe",
-                redirect_text="Takaisin",
-                message=form["error"],
-                redirect="/new_event",
+            return (
+                render_template(
+                    "message.html",
+                    title="Virhe",
+                    redirect_text="Takaisin",
+                    message=form["error"],
+                    redirect="/new_event",
+                ),
+                400,
             )
 
         try:
@@ -268,12 +316,15 @@ def edit_event(event_id):
                 form["spots"],
             )
         except sqlite3.Error:
-            return render_template(
-                "message.html",
-                title="Virhe",
-                redirect_text="Takaisin",
-                message="Tuntemattomasta syystä, tapahtumaa ei voitu päivittää tietokantaan.",
-                redirect=f"/edit/{event_id}",
+            return (
+                render_template(
+                    "message.html",
+                    title="Virhe",
+                    redirect_text="Takaisin",
+                    message="Tuntemattomasta syystä, tapahtumaa ei voitu päivittää tietokantaan.",
+                    redirect=f"/edit/{event_id}",
+                ),
+                500,
             )
 
         return render_template(
@@ -291,20 +342,26 @@ def delete(event_id):
     event = event_calendar.get_event(event_id)
 
     if not event:
-        return render_template(
-            "message.html",
-            title="Virhe",
-            redirect_text="Takaisin",
-            message="Tapahtuma on poistettu tai sitä ei ole olemassa.",
-            redirect="/",
+        return (
+            render_template(
+                "message.html",
+                title="Virhe",
+                redirect_text="Takaisin",
+                message="Tapahtuma on poistettu tai sitä ei ole olemassa.",
+                redirect="/",
+            ),
+            404,
         )
     if event["user"] != session["user_id"]:
-        return render_template(
-            "message.html",
-            title="Virhe",
-            redirect_text="Takaisin",
-            message="Sinulla ei ole oikeuksia poistaa tätä tapahtumaa.",
-            redirect="/",
+        return (
+            render_template(
+                "message.html",
+                title="Virhe",
+                redirect_text="Takaisin",
+                message="Sinulla ei ole oikeuksia poistaa tätä tapahtumaa.",
+                redirect="/",
+            ),
+            403,
         )
     if request.method == "GET":
         return render_template("delete_event.html", event_id=event_id)
@@ -314,12 +371,15 @@ def delete(event_id):
             try:
                 event_calendar.delete_event(event_id)
             except sqlite3.Error:
-                return render_template(
-                    "message.html",
-                    title="Virhe",
-                    redirect_text="Takaisin",
-                    message="Jokin meni pieleen.",
-                    redirect=f"/edit/{event_id}",
+                return (
+                    render_template(
+                        "message.html",
+                        title="Virhe",
+                        redirect_text="Takaisin",
+                        message="Tuntemattomasta syystä, tapahtumaa ei voitu poistaa.",
+                        redirect=f"/edit/{event_id}",
+                    ),
+                    500,
                 )
             return render_template(
                 "message.html",
