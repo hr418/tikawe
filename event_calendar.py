@@ -12,10 +12,7 @@ def get_events():
 
 
 def add_event(title, description, start, end, spots):
-    user_id_sql = """SELECT u.id
-             FROM Users u
-             WHERE u.username = ?"""
-    user_id = db.query(user_id_sql, [session["username"]])[0][0]
+    user_id = session["user_id"]
 
     sql = "INSERT INTO Events (user, title, description, start, end, spots, registeredCount, isCanceled) VALUES (?, ?, ?, ?, ?, ?, 0, 0)"
     db.execute(sql, [user_id, title, description, start, end, spots])

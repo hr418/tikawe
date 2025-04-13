@@ -52,6 +52,10 @@ def login():
             )
 
         if check_password_hash(result[0][0], password):
+            sql = "SELECT id FROM users WHERE username = ?"
+
+            result = db.query(sql, [username])
+            session["user_id"] = result[0][0]
             session["username"] = username
             return redirect("/")
 
@@ -66,6 +70,7 @@ def login():
 
 @app.route("/logout")
 def logout():
+    del session["user_id"]
     del session["username"]
     return redirect("/")
 
@@ -200,6 +205,7 @@ def new_event():
 
 @app.route("/edit/<int:event_id>", methods=["GET", "POST"])
 def edit_event(event_id):
+
     if request.method == "GET":
         return render_template("edit_event.html", event_id=event_id)
 
