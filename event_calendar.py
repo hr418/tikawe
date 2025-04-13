@@ -11,6 +11,13 @@ def get_events():
     return db.query(sql, [int(datetime.now().timestamp())])
 
 
+def get_event(event_id):
+    sql = """SELECT *
+             FROM Events e
+             WHERE e.id =?"""
+    return db.query(sql, [event_id])[0] if db.query(sql, [event_id]) else None
+
+
 def add_event(title, description, start, end, spots):
     user_id = session["user_id"]
 

@@ -1,5 +1,6 @@
 import sqlite3
 import re
+from functools import wraps
 from flask import Flask, render_template, request, session, redirect
 from werkzeug.security import generate_password_hash, check_password_hash
 import config
@@ -9,6 +10,22 @@ import utils
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
+
+
+def require_login(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "user_id" not in session:
+            return render_template(
+                "message.html",
+                title="Virhe",
+                redirect_text="Kirjaudu",
+                message="Et ole kirjautunut sisään.",
+                redirect="/login",
+            )
+        return f(*args, **kwargs)
+
+    return decorated_function
 
 
 @app.route("/")
@@ -69,6 +86,7 @@ def login():
 
 
 @app.route("/logout")
+@require_login
 def logout():
     del session["user_id"]
     del session["username"]
@@ -162,6 +180,7 @@ def register():
 
 
 @app.route("/new_event", methods=["GET", "POST"])
+@require_login
 def new_event():
     if request.method == "GET":
         return render_template("new_event.html")
@@ -204,8 +223,26 @@ def new_event():
 
 
 @app.route("/edit/<int:event_id>", methods=["GET", "POST"])
+@require_login
 def edit_event(event_id):
+    event = event_calendar.get_event(event_id)
 
+    if not event:
+        return render_template(
+            "message.html",
+            title="Virhe",
+            redirect_text="Takaisin",
+            message="Tapahtuma on poistettu tai sitä ei ole olemassa.",
+            redirect="/",
+        )
+    if event["user"] != session["user_id"]:
+        return render_template(
+            "message.html",
+            title="Virhe",
+            redirect_text="Takaisin",
+            message="Sinulla ei ole oikeuksia muokata tätä tapahtumaa.",
+            redirect="/",
+        )
     if request.method == "GET":
         return render_template("edit_event.html", event_id=event_id)
 
@@ -249,7 +286,26 @@ def edit_event(event_id):
 
 
 @app.route("/delete/<int:event_id>", methods=["GET", "POST"])
+@require_login
 def delete(event_id):
+    event = event_calendar.get_event(event_id)
+
+    if not event:
+        return render_template(
+            "message.html",
+            title="Virhe",
+            redirect_text="Takaisin",
+            message="Tapahtuma on poistettu tai sitä ei ole olemassa.",
+            redirect="/",
+        )
+    if event["user"] != session["user_id"]:
+        return render_template(
+            "message.html",
+            title="Virhe",
+            redirect_text="Takaisin",
+            message="Sinulla ei ole oikeuksia poistaa tätä tapahtumaa.",
+            redirect="/",
+        )
     if request.method == "GET":
         return render_template("delete_event.html", event_id=event_id)
 
