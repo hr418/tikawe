@@ -49,12 +49,28 @@ def event_form_handler(form):
     if len(description) > 5000:
         return {"error": "Kuvaus ei voi olla pidempi kuin 5000 merkkiä."}
 
+    if spots and not spots.isdigit():
+        return {"error": "Paikkojen määrä on oltava numero."}
+
+    if spots and int(spots) < 1:
+        return {"error": "Paikkojen määrä on oltava suurempi kuin 0."}
+
+    if spots and int(spots) > 9999999:
+        return {"error": "Paikkojen määrä ei voi olla suurempi kuin 9999999."}
+
     start_epoch = datetime.strptime(
         f"{start_date} {start_time}", "%Y-%m-%d %H:%M"
     ).timestamp()
     end_epoch = datetime.strptime(
         f"{end_date} {end_time}", "%Y-%m-%d %H:%M"
     ).timestamp()
+
+    if (
+        start_epoch > datetime.now().timestamp() + 315569260
+        or end_epoch > datetime.now().timestamp() + 315569260
+    ):
+        # 315569260 seconds = 10 years
+        return {"error": "Tapahtuma ei voi alkaa tai loppua yli 10 vuoden päästä."}
 
     if start_epoch < datetime.now().timestamp():
         return {"error": "Tapahtuma ei voi alkaa menneisyydessä."}
