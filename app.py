@@ -61,82 +61,90 @@ def logout():
     return redirect("/")
 
 
-@app.route("/register")
+@app.route("/register", methods=["GET", "POST"])
 def register():
-    return render_template("register.html")
+    if request.method == "GET":
+        return render_template("register.html")
+    if request.method == "POST":
+        username = request.form["username"]
+        password1 = request.form["password1"]
+        password2 = request.form["password2"]
 
+        if not username or not password1 or not password2:
+            return render_template(
+                "message.html",
+                title="Virhe",
+                redirect_text="Takaisin",
+                message="Kaikki kentät ovat pakollisia.",
+                redirect="/register",
+            )
 
-@app.route("/create", methods=["POST"])
-def create():
-    username = request.form["username"]
-    password1 = request.form["password1"]
-    password2 = request.form["password2"]
-    if password1 != password2:
+        if password1 != password2:
+            return render_template(
+                "message.html",
+                title="Virhe",
+                redirect_text="Takaisin",
+                message="Salasanat eivät täsmää.",
+                redirect="/register",
+            )
+
+        if len(password1) < 8:
+            return render_template(
+                "message.html",
+                title="Virhe",
+                redirect_text="Takaisin",
+                message="Salasana ei ole tarpeeksi pitkä.",
+                redirect="/register",
+            )
+        if len(password1) > 30:
+            return render_template(
+                "message.html",
+                title="Virhe",
+                redirect_text="Takaisin",
+                message="Salasana ei voi olla pidempi kuin 30 merkkiä.",
+                redirect="/register",
+            )
+        if len(username) > 30:
+            return render_template(
+                "message.html",
+                title="Virhe",
+                redirect_text="Takaisin",
+                message="Tunnus ei voi olla pidempi kuin 30 merkkiä.",
+                redirect="/register",
+            )
+        # Check if username contains more than one consequtive space, space as the first character, space as the last character, or illegal characters
+        if re.search(r"\s{2,}|^ | $", username) or not re.fullmatch(
+            r"[\w ]+", username
+        ):
+            return render_template(
+                "message.html",
+                title="Virhe",
+                redirect_text="Takaisin",
+                message="Tunnus ei kelpaa.",
+                redirect="/register",
+            )
+
+        password_hash = generate_password_hash(password1)
+
+        try:
+            sql = "INSERT INTO users (username, password_hash) VALUES (?, ?)"
+            db.execute(sql, [username, password_hash])
+        except sqlite3.IntegrityError:
+            return render_template(
+                "message.html",
+                title="Virhe",
+                redirect_text="Takaisin",
+                message="Tunnus on jo olemassa.",
+                redirect="/register",
+            )
+
         return render_template(
             "message.html",
-            title="Virhe",
-            redirect_text="Takaisin",
-            message="Salasanat eivät täsmää.",
-            redirect="/register",
+            title="Onnistui",
+            redirect_text="Etusivulle",
+            message="Käyttäjä luotu.",
+            redirect="/",
         )
-    password_hash = generate_password_hash(password1)
-
-    if len(password1) < 8:
-        return render_template(
-            "message.html",
-            title="Virhe",
-            redirect_text="Takaisin",
-            message="Salasana ei ole tarpeeksi pitkä.",
-            redirect="/register",
-        )
-
-    if len(password1) > 30:
-        return render_template(
-            "message.html",
-            title="Virhe",
-            redirect_text="Takaisin",
-            message="Salasana ei voi olla pidempi kuin 30 merkkiä.",
-            redirect="/register",
-        )
-
-    if len(username) > 30:
-        return render_template(
-            "message.html",
-            title="Virhe",
-            redirect_text="Takaisin",
-            message="Tunnus ei voi olla pidempi kuin 30 merkkiä.",
-            redirect="/register",
-        )
-
-    # Check if username contains more than one consequtive space, space as the first character, space as the last character, or illegal characters
-    if re.search(r"\s{2,}|^ | $", username) or not re.fullmatch(r"[\w ]+", username):
-        return render_template(
-            "message.html",
-            title="Virhe",
-            redirect_text="Takaisin",
-            message="Tunnus ei kelpaa.",
-            redirect="/register",
-        )
-
-    try:
-        sql = "INSERT INTO users (username, password_hash) VALUES (?, ?)"
-        db.execute(sql, [username, password_hash])
-    except sqlite3.IntegrityError:
-        return render_template(
-            "message.html",
-            title="Virhe",
-            redirect_text="Takaisin",
-            message="Tunnus on jo olemassa.",
-            redirect="/register",
-        )
-
-    return render_template(
-        "message.html",
-        title="Onnistui",
-        redirect_text="Etusivulle",
-        message="Käyttäjä luotu.",
-        redirect="/",
-    )
 
 
 @app.route("/new_event", methods=["GET", "POST"])
