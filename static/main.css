@@ -1,3 +1,7 @@
+* {
+  box-sizing: border-box;
+}
+
 body {
   padding: 0;
   margin: 0;
@@ -5,13 +9,23 @@ body {
 
 .main {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
 }
 
 .main__content {
   max-width: 50rem;
   flex-grow: 1;
-  margin: 1rem;
+  width: 100%;
+  padding: 1rem;
+}
+
+.main__content--user-page {
+  max-width: 50rem;
+  flex-grow: 1;
+  width: 100%;
+  padding: 1rem;
+  padding-bottom: 0;
 }
 
 .form > * {
@@ -75,7 +89,8 @@ body {
   flex-direction: column;
   max-width: 50rem;
   margin: auto;
-  padding-block: 2rem;
+  padding-inline: 1rem;
+  padding-block: 1.5rem;
 }
 
 .event-item__main-info {
@@ -134,6 +149,7 @@ body {
 .horizontal-divider {
   border-bottom: 1px solid lightgray;
   margin: 1rem 0;
+  flex-grow: 1;
 }
 
 .no-events-message {
@@ -185,4 +201,22 @@ body {
 .event-top-bar__creator {
   display: flex;
   gap: 1rem;
+}
+
+.user-section-divider {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
+  gap: 1rem;
+}
+
+.user-section-divider__text {
+  font-weight: bold;
+  margin: 0;
+}
+
+.user-title {
+  margin: 0;
+  margin-top: 1rem;
 }

@@ -1,5 +1,6 @@
 import sqlite3
 import re
+from datetime import datetime
 from functools import wraps
 from flask import Flask, render_template, request, session, redirect
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -63,7 +64,7 @@ def login():
                 400,
             )
 
-        sql = "SELECT password_hash FROM users WHERE username = ?"
+        sql = "SELECT passwordHash FROM users WHERE username = ?"
 
         result = db.query(sql, [username])
 
@@ -191,8 +192,10 @@ def register():
         password_hash = generate_password_hash(password1)
 
         try:
-            sql = "INSERT INTO users (username, password_hash) VALUES (?, ?)"
-            db.execute(sql, [username, password_hash])
+            sql = (
+                "INSERT INTO users (username, passwordHash, createdAt) VALUES (?, ?, ?)"
+            )
+            db.execute(sql, [username, password_hash, int(datetime.now().timestamp())])
         except sqlite3.IntegrityError:
             return (
                 render_template(
@@ -579,3 +582,38 @@ def unregister_from_event(event_id):
             )
         if "cancel" in request.form:
             return redirect(f"/event/{event_id}")
+
+
+@app.route("/user/<int:user_id>")
+@require_login
+def user(user_id):
+    user = event_calendar.get_user(user_id)
+
+    if not user:
+        return (
+            render_template(
+                "message.html",
+                title="Virhe",
+                redirect_text="Takaisin",
+                message="Käyttäjää ei löydy.",
+                redirect="/",
+            ),
+            404,
+        )
+
+    return render_template(
+        "user.html",
+        user=user,
+        events=list(
+            map(
+                event_calendar.format_event_display,
+                event_calendar.get_user_events(user_id),
+            )
+        ),
+        participations=list(
+            map(
+                event_calendar.format_event_display,
+                event_calendar.get_user_participations(user_id),
+            )
+        ),
+    )

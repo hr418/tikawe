@@ -1,4 +1,5 @@
 from datetime import datetime
+import math
 from flask import session
 import db
 
@@ -25,27 +26,71 @@ def get_event_participants(event_id):
     return db.query(sql, [event_id]) if db.query(sql, [event_id]) else None
 
 
+def get_user_events(user_id):
+    sql = """SELECT e.id, e.title, e.description, e.start, e.end, e.spots, e.registeredCount, e.isCanceled, u.username, u.id AS user_id
+             FROM Events e, Users u
+             WHERE e.user = ? AND e.start >= ? AND e.user = u.id
+             ORDER BY e.start"""
+    return db.query(sql, [user_id, int(datetime.now().timestamp())])
+
+
+def get_user_participations(user_id):
+    sql = """SELECT e.id, e.title, e.description, e.start, e.end, e.spots, e.registeredCount, e.isCanceled, u.username, u.id AS user_id
+             FROM EventParticipants ep, Events e, Users u
+             WHERE ep.user = ? AND ep.event = e.id AND e.user = u.id AND e.start >= ?
+             ORDER BY e.start"""
+    return db.query(sql, [user_id, int(datetime.now().timestamp())])
+
+
+def get_user(user_id):
+    sql = """SELECT u.id, u.username, u.createdAt
+             FROM Users u
+             WHERE u.id = ?"""
+
+    user = db.query(sql, [user_id])[0] if db.query(sql, [user_id]) else None
+
+    if not user:
+        return None
+
+    sql = """SELECT COUNT(e.id) AS event_count, IFNULL(SUM(e.registeredCount), 0) AS total_participants
+             FROM Events e
+             WHERE e.user = ? AND e.start >= ?"""
+    statistics = db.query(sql, [user_id, int(datetime.now().timestamp())])[0]
+
+    account_age = math.floor(
+        (datetime.now().timestamp() - user["createdAt"]) / 86400
+    )  # seconds to days
+
+    return {
+        "id": user["id"],
+        "username": user["username"],
+        "event_count": statistics["event_count"],
+        "total_participants": statistics["total_participants"],
+        "account_age": account_age,
+    }
+
+
 def add_event(title, description, start, end, spots, tags):
     user_id = session["user_id"]
 
-    sql_events = "INSERT INTO Events (user, title, description, start, end, spots, registeredCount, isCanceled) VALUES (?, ?, ?, ?, ?, ?, 0, 0)"
-    sql_tags = "INSERT INTO EventTags (event, title, value) VALUES (?, ?, ?)"
-
-    db.execute(sql_events, [user_id, title, description, start, end, spots])
+    sql = "INSERT INTO Events (user, title, description, start, end, spots, registeredCount, isCanceled) VALUES (?, ?, ?, ?, ?, ?, 0, 0)"
+    db.execute(sql, [user_id, title, description, start, end, spots])
     event_id = db.last_insert_id()
+
+    sql = "INSERT INTO EventTags (event, title, value) VALUES (?, ?, ?)"
     for tag, value in tags.items():
-        db.execute(sql_tags, [event_id, tag, value])
+        db.execute(sql, [event_id, tag, value])
 
 
 def edit_event(event_id, title, description, start, end, spots, tags):
-    sql_tags = "DELETE FROM EventTags WHERE event = ?"
-    sql_events = "UPDATE Events SET title = ?, description = ?, start = ?, end = ?, spots = ? WHERE id = ?"
-
-    db.execute(sql_tags, [event_id])
+    sql = "DELETE FROM EventTags WHERE event = ?"
+    db.execute(sql, [event_id])
     for tag, value in tags.items():
-        sql_tags = "INSERT INTO EventTags (event, title, value) VALUES (?, ?, ?)"
-        db.execute(sql_tags, [event_id, tag, value])
-    db.execute(sql_events, [title, description, start, end, spots, event_id])
+        sql = "INSERT INTO EventTags (event, title, value) VALUES (?, ?, ?)"
+        db.execute(sql, [event_id, tag, value])
+
+    sql = "UPDATE Events SET title = ?, description = ?, start = ?, end = ?, spots = ? WHERE id = ?"
+    db.execute(sql, [title, description, start, end, spots, event_id])
 
 
 def register_to_event(event_id, user_id):

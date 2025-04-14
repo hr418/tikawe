@@ -1,7 +1,8 @@
 CREATE TABLE Users (
     id INTEGER PRIMARY KEY,
     username TEXT,
-    password_hash TEXT,
+    passwordHash TEXT,
+    createdAt INTEGER NOT NULL,
     UNIQUE (username COLLATE NOCASE)
 );
 

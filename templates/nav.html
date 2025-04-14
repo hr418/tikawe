@@ -4,7 +4,7 @@
     <a class="nav__logo" href="/">Tapahtumakalenteri</a>
     <a href="/new_event">Uusi tapahtuma</a>
     <a href="/logout">Kirjaudu ulos</a>
-    <a href="/user">{{ session.username }}</a>
+    <a href="/user/{{session.user_id}}">{{ session.username }}</a>
   </nav>
 </header>
 {% else %}
