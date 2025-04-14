@@ -175,7 +175,7 @@ def register():
             )
         # Check if username contains more than one consequtive space, space as the first character, space as the last character, or illegal characters
         if re.search(r"\s{2,}|^ | $", username) or not re.fullmatch(
-            r"[\w ]+", username
+            r"^[a-öA-Ö0-9_]+$", username
         ):
             return (
                 render_template(
