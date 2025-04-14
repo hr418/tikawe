@@ -37,7 +37,9 @@ def index():
 
     return render_template(
         "index.html",
-        events=map(event_calendar.format_event_display, event_calendar.get_events()),
+        events=list(
+            map(event_calendar.format_event_display, event_calendar.get_events())
+        ),
     )
 
 

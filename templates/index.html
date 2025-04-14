@@ -9,8 +9,8 @@
     {% include "nav.html" %}
     <main class="main">
       {% if not events %}
-      <p>Ei tapahtumia.</p>
-      {% endif %}
+      <p class="no-events-message">Ei tapahtumia.</p>
+      {% else %}
       <ul class="event-items">
         {% for event in events %} {% if event.is_canceled %}
         <li class="event-item--canceled">
@@ -56,6 +56,7 @@
         </li>
         {% endif%} {% endfor %}
       </ul>
+      {% endif %}
     </main>
   </body>
 </html>
