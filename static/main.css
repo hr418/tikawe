@@ -143,3 +143,46 @@ body {
   color: gray;
   text-align: center;
 }
+
+.pill-list {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+.pill-list__pill {
+  background-color: #f6f6f6;
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding-block: 0.2rem;
+  padding-inline: 0.5rem;
+  border-radius: 0.5rem;
+}
+
+.event-title {
+  margin: 0;
+}
+
+.event-top-bar {
+  margin-bottom: 1rem;
+}
+
+.event-description {
+  margin-block: 2rem;
+}
+
+.event-participants__text {
+  font-weight: bold;
+}
+
+.event-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.event-top-bar__creator {
+  display: flex;
+  gap: 1rem;
+}

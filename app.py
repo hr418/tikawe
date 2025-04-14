@@ -283,7 +283,7 @@ def edit_event(event_id):
             ),
             404,
         )
-    if event["user"] != session["user_id"]:
+    if event["username"] != session["username"]:
         return (
             render_template(
                 "message.html",
@@ -368,7 +368,7 @@ def delete(event_id):
             ),
             404,
         )
-    if event["user"] != session["user_id"]:
+    if event["username"] != session["username"]:
         return (
             render_template(
                 "message.html",
@@ -405,3 +405,177 @@ def delete(event_id):
                 redirect="/",
             )
         return redirect("/")
+
+
+@app.route("/event/<int:event_id>")
+@require_login
+def event(event_id):
+    event = event_calendar.get_event(event_id)
+
+    if not event:
+        return (
+            render_template(
+                "message.html",
+                title="Virhe",
+                redirect_text="Takaisin",
+                message="Tapahtuma on poistettu tai sitä ei ole olemassa.",
+                redirect="/",
+            ),
+            404,
+        )
+    return render_template(
+        "event.html",
+        event=event_calendar.format_event_display(event),
+        tags=event_calendar.format_tags_display(
+            event_calendar.get_event_tags(event_id)
+        ),
+        is_participant=event_calendar.is_event_participant(
+            event_id, session["user_id"]
+        ),
+        participants=event_calendar.get_event_participants(event_id),
+    )
+
+
+@app.route("/event/<int:event_id>/register", methods=["POST", "GET"])
+@require_login
+def register_to_event(event_id):
+    event = event_calendar.get_event(event_id)
+
+    if not event:
+        return (
+            render_template(
+                "message.html",
+                title="Virhe",
+                redirect_text="Takaisin",
+                message="Tapahtuma on poistettu tai sitä ei ole olemassa.",
+                redirect="/",
+            ),
+            404,
+        )
+
+    if event["isCanceled"]:
+        return (
+            render_template(
+                "message.html",
+                title="Virhe",
+                redirect_text="Takaisin",
+                message="Tapahtuma on peruttu.",
+                redirect=f"/event/{event_id}",
+            ),
+            400,
+        )
+
+    if event["spots"] and event["registeredCount"] >= event["spots"]:
+        return (
+            render_template(
+                "message.html",
+                title="Virhe",
+                redirect_text="Takaisin",
+                message="Tapahtuma on täynnä.",
+                redirect=f"/event/{event_id}",
+            ),
+            400,
+        )
+
+    if event_calendar.is_event_participant(event_id, session["user_id"]):
+        return (
+            render_template(
+                "message.html",
+                title="Virhe",
+                redirect_text="Takaisin",
+                message="Olet jo ilmoittautunut tapahtumaan.",
+                redirect=f"/event/{event_id}",
+            ),
+            400,
+        )
+    if request.method == "GET":
+        return render_template(
+            "register_to_event.html",
+            event=event_calendar.format_event_display(event),
+        )
+
+    if request.method == "POST":
+        if "continue" in request.form:
+            try:
+                event_calendar.register_to_event(event_id, session["user_id"])
+            except sqlite3.Error:
+                return (
+                    render_template(
+                        "message.html",
+                        title="Virhe",
+                        redirect_text="Takaisin",
+                        message="Tuntemattomasta syystä, ilmoittautuminen ei onnistunut.",
+                        redirect=f"/event/{event_id}",
+                    ),
+                    500,
+                )
+            return render_template(
+                "message.html",
+                title="Onnistui",
+                redirect_text="Etusivulle",
+                message="Ilmoittautuminen onnistui.",
+                redirect="/",
+            )
+        if "cancel" in request.form:
+            return redirect(f"/event/{event_id}")
+
+
+@app.route("/event/<int:event_id>/unregister", methods=["POST", "GET"])
+@require_login
+def unregister_from_event(event_id):
+    event = event_calendar.get_event(event_id)
+
+    if not event:
+        return (
+            render_template(
+                "message.html",
+                title="Virhe",
+                redirect_text="Takaisin",
+                message="Tapahtuma on poistettu tai sitä ei ole olemassa.",
+                redirect="/",
+            ),
+            404,
+        )
+
+    if not event_calendar.is_event_participant(event_id, session["user_id"]):
+        return (
+            render_template(
+                "message.html",
+                title="Virhe",
+                redirect_text="Takaisin",
+                message="Et ole rekisteröitynyt tapahtumaan.",
+                redirect=f"/event/{event_id}",
+            ),
+            400,
+        )
+
+    if request.method == "GET":
+        return render_template(
+            "unregister_from_event.html",
+            event=event_calendar.format_event_display(event),
+        )
+
+    if request.method == "POST":
+        if "continue" in request.form:
+            try:
+                event_calendar.unregister_from_event(event_id, session["user_id"])
+            except sqlite3.Error:
+                return (
+                    render_template(
+                        "message.html",
+                        title="Virhe",
+                        redirect_text="Takaisin",
+                        message="Tuntemattomasta syystä, peruminen ei onnistunut.",
+                        redirect=f"/event/{event_id}",
+                    ),
+                    500,
+                )
+            return render_template(
+                "message.html",
+                title="Onnistui",
+                redirect_text="Etusivulle",
+                message="Ilmoittautumisesi on peruttu.",
+                redirect="/",
+            )
+        if "cancel" in request.form:
+            return redirect(f"/event/{event_id}")

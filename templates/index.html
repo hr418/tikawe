@@ -18,18 +18,14 @@
             <div class="event-item__main-info">
               <p class="event-item__main-info__date">{{ event.date }}</p>
               <div class="event-item__text">
-                <a href="/" class="event-item__text__title">{{ event.title }}</a>
+                <a href="/event/{{event.id}}" class="event-item__text__title">{{ event.title }}</a>
                 <p class="event-item__text__description">{{ event.description}}</p>
               </div>
             </div>
             <div class="event-item__secondary-info">
-              <p>{{ event.username }}</p>
-              <p>{{ event.duration }}</p>
-              <p>{{ event.spots }}</p>
-              {% if session.username == event.username %}
-              <a href="/edit/{{ event.id }}">Muokkaa</a>
-              <a href="/delete/{{ event.id }}">Poista</a>
-              {% endif %}
+              <p>Ilmoittautuneet: {{ event.spots }}</p>
+              <p>Aika: {{ event.duration }}</p>
+              <p>Luonut: <a href="/user/{{event.user_id}}">{{ event.username }}</a></p>
             </div>
           </div>
         </li>
@@ -39,18 +35,14 @@
             <div class="event-item__main-info">
               <p class="event-item__main-info__date">{{ event.date }}</p>
               <div class="event-item__text">
-                <a href="/" class="event-item__text__title">{{ event.title }}</a>
+                <a href="/event/{{event.id}}" class="event-item__text__title">{{ event.title }}</a>
                 <p class="event-item__text__description">{{ event.description}}</p>
               </div>
             </div>
             <div class="event-item__secondary-info">
-              <p>{{ event.username }}</p>
-              <p>{{ event.duration }}</p>
-              <p>{{ event.spots }}</p>
-              {% if session.username == event.username %}
-              <a href="/edit/{{ event.id }}">Muokkaa</a>
-              <a href="/delete/{{ event.id }}">Poista</a>
-              {% endif %}
+              <p>Ilmoittautuneet: {{ event.spots }}</p>
+              <p>Aika: {{ event.duration }}</p>
+              <p>Luonut: <a href="/user/{{event.user_id}}">{{ event.username }}</a></p>
             </div>
           </div>
         </li>

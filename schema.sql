@@ -17,6 +17,13 @@ CREATE TABLE Events (
     isCanceled BOOLEAN NOT NULL
 );
 
+CREATE TABLE EventParticipants (
+    id INTEGER PRIMARY KEY,
+    event INTEGER REFERENCES Events ON DELETE CASCADE,
+    user INTEGER REFERENCES Users,
+    UNIQUE (event, user)
+);
+
 CREATE TABLE Tags (
     id INTEGER PRIMARY KEY,
     title TEXT,

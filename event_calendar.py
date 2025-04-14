@@ -4,7 +4,7 @@ import db
 
 
 def get_events():
-    sql = """SELECT e.id, e.title, e.description, e.start, e.end, e.spots, e.registeredCount, e.isCanceled, u.username
+    sql = """SELECT e.id, e.title, e.description, e.start, e.end, e.spots, e.registeredCount, e.isCanceled, u.username, u.id AS user_id
              FROM Events e, Users u
              WHERE e.start >= ? AND e.user = u.id
              ORDER BY e.start"""
@@ -12,10 +12,17 @@ def get_events():
 
 
 def get_event(event_id):
-    sql = """SELECT *
-             FROM Events e
-             WHERE e.id =?"""
+    sql = """SELECT e.id, e.title, e.description, e.start, e.end, e.spots, e.registeredCount, e.isCanceled, u.username, u.id AS user_id
+             FROM Events e, users u
+             WHERE e.id =? AND e.user = u.id"""
     return db.query(sql, [event_id])[0] if db.query(sql, [event_id]) else None
+
+
+def get_event_participants(event_id):
+    sql = """SELECT u.username, u.id
+             FROM EventParticipants ep, Users u
+             WHERE ep.event = ? AND ep.user = u.id"""
+    return db.query(sql, [event_id]) if db.query(sql, [event_id]) else None
 
 
 def add_event(title, description, start, end, spots, tags):
@@ -39,6 +46,28 @@ def edit_event(event_id, title, description, start, end, spots, tags):
         sql_tags = "INSERT INTO EventTags (event, title, value) VALUES (?, ?, ?)"
         db.execute(sql_tags, [event_id, tag, value])
     db.execute(sql_events, [title, description, start, end, spots, event_id])
+
+
+def register_to_event(event_id, user_id):
+    sql = "UPDATE Events SET registeredCount = registeredCount + 1 WHERE id = ?"
+    db.execute(sql, [event_id])
+
+    sql = "INSERT INTO EventParticipants (event, user) VALUES (?, ?)"
+    db.execute(sql, [event_id, user_id])
+
+
+def unregister_from_event(event_id, user_id):
+    sql = "UPDATE Events SET registeredCount = registeredCount - 1 WHERE id = ?"
+    db.execute(sql, [event_id])
+
+    sql = "DELETE FROM EventParticipants WHERE event = ? AND user = ?"
+    db.execute(sql, [event_id, user_id])
+
+
+def is_event_participant(event_id, user_id):
+    sql = "SELECT * FROM EventParticipants WHERE event = ? AND user = ?"
+    result = db.query(sql, [event_id, user_id])
+    return len(result) > 0
 
 
 def delete_event(event_id):
@@ -81,17 +110,25 @@ def format_event_display(event):
     result["title"] = event["title"]
     result["description"] = event["description"]
     result["username"] = event["username"]
+    result["user_id"] = event["user_id"]
     result["is_canceled"] = event["isCanceled"]
     result["spots"] = (
-        f"{event["registeredCount"]} / {event["spots"]} ilmoittautunut"
+        f"{event["registeredCount"]} / {event["spots"]}"
         if event["spots"]
-        else f"{event["registeredCount"]} ilmoittautunut"
+        else f"{event["registeredCount"]}"
     )
     result["date"] = f"{start.day}.{start.month}"
     result["duration"] = (
         f"{start.strftime("%d/%m/%Y %H:%M")} - {end.strftime("%d/%m/%Y %H:%M")}"
     )
 
+    return result
+
+
+def format_tags_display(tags):
+    result = []
+    for tag, value in tags.items():
+        result.append(f"{tag}: {value}")
     return result
 
 

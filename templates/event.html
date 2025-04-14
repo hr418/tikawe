@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{{ event.title }}</title>
+    <link rel="stylesheet" href="/static/main.css" />
+  </head>
+
+  <body>
+    {% include "nav.html" %}
+    <main class="main">
+      <div class="main__content">
+        <div class="event-top-bar">
+          {% if is_participant %}
+          <a href="/event/{{event.id}}/unregister">Peru Ilmoittautuminen</a>
+          {% else %}
+          <a href="/event/{{event.id}}/register">Ilmoittaudu</a>
+          {% endif %} {% if session.user_id == event.user_id %}
+          <div class="event-top-bar__creator">
+            <a href="/edit/{{ event.id }}">Muokkaa</a>
+            <a href="/delete/{{ event.id }}">Poista</a>
+          </div>
+          {% endif %}
+        </div>
+        <h1 class="event-title">{{event.title}}</h1>
+        <div class="pill-list">
+          <p class="pill-list__pill">
+            Luonut: <a href="/user/{{event.user_id}}">{{event.username}}</a>
+          </p>
+          <p class="pill-list__pill">Ilmoittautuneet: {{ event.spots }}</p>
+          <p class="pill-list__pill">Aika: {{ event.duration }}</p>
+          {% for tag in tags %}
+          <p class="pill-list__pill">{{tag}}</p>
+          {% endfor %}
+        </div>
+        <p class="event-description">{{event.description}}</p>
+        <p class="event-participants__text">Tapahtumaan Ilmoittautuneet</p>
+        {% if participants %}
+        <div class="pill-list">
+          {% for participant in participants %}
+          <a class="pill-list__pill" href="/user/{{participant.id}}">{{participant.username}}</a>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p>Ei ilmoittautuneita.</p>
+        {% endif %}
+      </div>
+    </main>
+  </body>
+</html>
