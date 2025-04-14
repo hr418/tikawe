@@ -16,3 +16,16 @@ CREATE TABLE Events (
     registeredCount INTEGER NOT NULL,
     isCanceled BOOLEAN NOT NULL
 );
+
+CREATE TABLE Tags (
+    id INTEGER PRIMARY KEY,
+    title TEXT,
+    value TEXT
+);
+
+CREATE TABLE EventTags (
+    id INTEGER PRIMARY KEY,
+    event INTEGER REFERENCES Events ON DELETE CASCADE,
+    title TEXT,
+    value TEXT
+);

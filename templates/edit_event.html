@@ -10,6 +10,23 @@
     <main class="main">
       <div class="main__content">
         <form action="/edit/{{ event.id }}" method="post" class="form">
+          <div class="form__tags">
+            {% for tag in tags %}
+            <div class="form__tag">
+              <label for="{{tag}}">{{tag}}: </label>
+              <select name="{{ tag }}" id="{{tag}}">
+                <option value="not_specified">Ei määritelty</option>
+                {% for option in tags[tag] %} {% if option == event_tags[tag] %}
+                <option selected value="{{ option }}">{{ option }}</option>
+                {% else %}
+                <option value="{{ option }}">{{ option }}</option>
+                {% endif %} {% endfor %}
+              </select>
+            </div>
+            {% endfor %}
+          </div>
+
+          <div class="horizontal-divider"></div>
           <div>
             <label for="title">Otsikko: <span class="form__required">*</span></label>
             <br />

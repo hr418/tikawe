@@ -3,10 +3,6 @@ body {
   margin: 0;
 }
 
-.abc {
-  max-width: 100%;
-}
-
 .main {
   display: flex;
   justify-content: center;
@@ -20,6 +16,10 @@ body {
 
 .form > * {
   margin-bottom: 1rem;
+}
+
+.form {
+  position: relative;
 }
 
 .form__requirement {
@@ -122,4 +122,16 @@ body {
   display: -webkit-box;
   overflow: hidden;
   word-break: break-word;
+}
+
+.form__tags {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.horizontal-divider {
+  border-bottom: 1px solid lightgray;
+  margin: 1rem 0;
 }

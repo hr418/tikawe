@@ -18,21 +18,57 @@ def get_event(event_id):
     return db.query(sql, [event_id])[0] if db.query(sql, [event_id]) else None
 
 
-def add_event(title, description, start, end, spots):
+def add_event(title, description, start, end, spots, tags):
     user_id = session["user_id"]
 
-    sql = "INSERT INTO Events (user, title, description, start, end, spots, registeredCount, isCanceled) VALUES (?, ?, ?, ?, ?, ?, 0, 0)"
-    db.execute(sql, [user_id, title, description, start, end, spots])
+    sql_events = "INSERT INTO Events (user, title, description, start, end, spots, registeredCount, isCanceled) VALUES (?, ?, ?, ?, ?, ?, 0, 0)"
+    sql_tags = "INSERT INTO EventTags (event, title, value) VALUES (?, ?, ?)"
+
+    db.execute(sql_events, [user_id, title, description, start, end, spots])
+    event_id = db.last_insert_id()
+    for tag, value in tags.items():
+        db.execute(sql_tags, [event_id, tag, value])
 
 
-def edit_event(event_id, title, description, start, end, spots):
-    sql = "UPDATE Events SET title = ?, description = ?, start = ?, end = ?, spots = ? WHERE id = ?"
-    db.execute(sql, [title, description, start, end, spots, event_id])
+def edit_event(event_id, title, description, start, end, spots, tags):
+    sql_tags = "DELETE FROM EventTags WHERE event = ?"
+    sql_events = "UPDATE Events SET title = ?, description = ?, start = ?, end = ?, spots = ? WHERE id = ?"
+
+    db.execute(sql_tags, [event_id])
+    for tag, value in tags.items():
+        sql_tags = "INSERT INTO EventTags (event, title, value) VALUES (?, ?, ?)"
+        db.execute(sql_tags, [event_id, tag, value])
+    db.execute(sql_events, [title, description, start, end, spots, event_id])
 
 
 def delete_event(event_id):
     sql = "DELETE FROM Events WHERE id = ?"
     db.execute(sql, [event_id])
+
+
+def get_tags():
+    sql = """SELECT t.title, t.value
+             FROM Tags t"""
+    tags = db.query(sql)
+
+    result = {}
+    for tag in tags:
+        if tag["title"] not in result:
+            result[tag["title"]] = []
+        result[tag["title"]].append(tag["value"])
+    return result
+
+
+def get_event_tags(event_id):
+    sql = """SELECT t.title, t.value
+             FROM EventTags t
+             WHERE t.event = ?"""
+    tags = db.query(sql, [event_id])
+
+    result = {}
+    for tag in tags:
+        result[tag["title"]] = tag["value"]
+    return result
 
 
 # Formats event attributes for display
@@ -68,7 +104,7 @@ def format_event_form(event):
     result["id"] = event["id"]
     result["title"] = event["title"]
     result["description"] = event["description"]
-    result["spots"] = event["spots"]
+    result["spots"] = event["spots"] if event["spots"] else ""
     result["start_date"] = start.strftime("%Y-%m-%d")
     result["start_time"] = start.strftime("%H:%M")
     result["end_date"] = end.strftime("%Y-%m-%d")
@@ -77,8 +113,8 @@ def format_event_form(event):
     return result
 
 
-# Validates event form data
-def event_form_handler(form):
+# Validates event form data and formats for database
+def event_form_handler(form, possible_tags):
     title = form["title"]
     description = form["description"]
     start_date = form["start_date"]
@@ -132,11 +168,22 @@ def event_form_handler(form):
     if end_epoch < start_epoch:
         return {"error": "Tapahtuma ei voi loppua, sen jälkeen kun se on alkanut."}
 
+    event_tags = {}
+
+    for tag in possible_tags:
+        if tag not in form or form[tag] == "not_specified":
+            continue
+        tag_value = form[tag]
+        if tag_value not in possible_tags[tag]:
+            return {"error": f"Luokittelun {tag} arvo '{tag_value}' ei ole sallittu."}
+        event_tags[tag] = tag_value
+
     return {
         "title": title,
         "description": description,
         "start_epoch": start_epoch,
         "end_epoch": end_epoch,
         "spots": None if not spots else int(spots),
+        "tags": event_tags,
         "error": None,
     }

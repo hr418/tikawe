@@ -215,11 +215,13 @@ def register():
 @app.route("/new_event", methods=["GET", "POST"])
 @require_login
 def new_event():
+    tags = event_calendar.get_tags()
+
     if request.method == "GET":
-        return render_template("new_event.html")
+        return render_template("new_event.html", tags=tags)
 
     if request.method == "POST":
-        form = event_calendar.event_form_handler(request.form)
+        form = event_calendar.event_form_handler(request.form, tags)
 
         if form["error"]:
             return (
@@ -240,8 +242,10 @@ def new_event():
                 form["start_epoch"],
                 form["end_epoch"],
                 form["spots"],
+                form["tags"],
             )
         except sqlite3.Error:
+
             return (
                 render_template(
                     "message.html",
@@ -288,15 +292,20 @@ def edit_event(event_id):
             ),
             403,
         )
+    tags = event_calendar.get_tags()
+
     if request.method == "GET":
+        event_tags = event_calendar.get_event_tags(event_id)
 
         return render_template(
             "edit_event.html",
             event=event_calendar.format_event_form(event),
+            tags=tags,
+            event_tags=event_tags,
         )
 
     if request.method == "POST":
-        form = event_calendar.event_form_handler(request.form)
+        form = event_calendar.event_form_handler(request.form, tags)
 
         if form["error"]:
             return (
@@ -318,6 +327,7 @@ def edit_event(event_id):
                 form["start_epoch"],
                 form["end_epoch"],
                 form["spots"],
+                form["tags"],
             )
         except sqlite3.Error:
             return (
@@ -381,7 +391,7 @@ def delete(event_id):
                         title="Virhe",
                         redirect_text="Takaisin",
                         message="Tuntemattomasta syystä, tapahtumaa ei voitu poistaa.",
-                        redirect=f"/edit/{event_id}",
+                        redirect=f"/event/{event_id}",
                     ),
                     500,
                 )
