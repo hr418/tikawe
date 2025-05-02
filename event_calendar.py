@@ -93,6 +93,17 @@ def edit_event(event_id, title, description, start, end, spots, tags):
     db.execute(sql, [title, description, start, end, spots, event_id])
 
 
+def cancel_event(event_id):
+    sql = "UPDATE Events SET isCanceled = 1 WHERE id = ?"
+    db.execute(sql, [event_id])
+
+    sql = "DELETE FROM EventParticipants WHERE event = ?"
+    db.execute(sql, [event_id])
+
+    sql = "UPDATE Events SET registeredCount = 0 WHERE id = ?"
+    db.execute(sql, [event_id])
+
+
 def register_to_event(event_id, user_id):
     sql = "UPDATE Events SET registeredCount = registeredCount + 1 WHERE id = ?"
     db.execute(sql, [event_id])

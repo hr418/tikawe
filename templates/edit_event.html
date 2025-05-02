@@ -9,7 +9,7 @@
     {% include "nav.html" %}
     <main class="main">
       <div class="main__content">
-        <form action="/edit/{{ event.id }}" method="post" class="form">
+        <form action="/event/{{ event.id }}/edit" method="post" class="form">
           <div class="form__tags">
             {% for tag in tags %}
             <div class="form__tag">

@@ -84,6 +84,18 @@ body {
   background-color: #f6f6f6;
 }
 
+.event-item--canceled:nth-child(odd) {
+  background-color: #f6f6f6;
+}
+
+.event-item--canceled .event-item__content {
+  opacity: 0.5;
+}
+
+.event-item--canceled .event-item__main-info__date {
+  text-decoration: line-through;
+}
+
 .event-item__content {
   display: flex;
   flex-direction: column;
@@ -137,6 +149,14 @@ body {
   display: -webkit-box;
   overflow: hidden;
   word-break: break-word;
+}
+
+.event-canceled-message {
+  margin: 0;
+}
+
+.event-title--canceled {
+  text-decoration: line-through;
 }
 
 .form__tags {

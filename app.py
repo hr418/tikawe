@@ -270,7 +270,7 @@ def new_event():
         )
 
 
-@app.route("/edit/<int:event_id>", methods=["GET", "POST"])
+@app.route("/event/<int:event_id>/edit", methods=["GET", "POST"])
 @require_login
 def edit_event(event_id):
     event = event_calendar.get_event(event_id)
@@ -355,7 +355,7 @@ def edit_event(event_id):
         )
 
 
-@app.route("/delete/<int:event_id>", methods=["GET", "POST"])
+@app.route("/event/<int:event_id>/delete", methods=["GET", "POST"])
 @require_login
 def delete(event_id):
     event = event_calendar.get_event(event_id)
@@ -617,3 +617,64 @@ def user(user_id):
             )
         ),
     )
+
+
+@app.route("/event/<int:event_id>/cancel", methods=["POST", "GET"])
+@require_login
+def cancel_event(event_id):
+    event = event_calendar.get_event(event_id)
+
+    if not event:
+        return (
+            render_template(
+                "message.html",
+                title="Virhe",
+                redirect_text="Takaisin",
+                message="Tapahtuma on poistettu tai sitä ei ole olemassa.",
+                redirect="/",
+            ),
+            404,
+        )
+
+    if event["username"] != session["username"]:
+        return (
+            render_template(
+                "message.html",
+                title="Virhe",
+                redirect_text="Takaisin",
+                message="Sinulla ei ole oikeutta perua tätä tapahtumaa.",
+                redirect="/",
+            ),
+            403,
+        )
+
+    if request.method == "GET":
+        return render_template(
+            "cancel_event.html",
+            event=event_calendar.format_event_display(event),
+        )
+
+    if request.method == "POST":
+        if "continue" in request.form:
+            try:
+                event_calendar.cancel_event(event_id)
+            except sqlite3.Error:
+                return (
+                    render_template(
+                        "message.html",
+                        title="Virhe",
+                        redirect_text="Takaisin",
+                        message="Tuntemattomasta syystä, tapahtumaa ei voitu perua.",
+                        redirect=f"/event/{event_id}",
+                    ),
+                    500,
+                )
+            return render_template(
+                "message.html",
+                title="Onnistui",
+                redirect_text="Etusivulle",
+                message="Tapahtuma peruttu.",
+                redirect="/",
+            )
+        if "cancel" in request.form:
+            return redirect(f"/event/{event_id}")

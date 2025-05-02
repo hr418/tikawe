@@ -10,7 +10,7 @@
     <main class="main">
       <div class="main__content">
         <p>Haluatko varmasti poistaa tapahtuman?</p>
-        <form class="form" action="/delete/{{ event_id }}" method="post">
+        <form class="form" action="/event/{{ event_id }}/delete" method="post">
           <input type="submit" name="continue" value="Jatka" />
           <input type="submit" name="cancel" value="Peruuta" />
         </form>

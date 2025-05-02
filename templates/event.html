@@ -12,16 +12,25 @@
         <div class="event-top-bar">
           {% if is_participant %}
           <a href="/event/{{event.id}}/unregister">Peru Ilmoittautuminen</a>
+          {% else %} {% if event.is_canceled %}
+          <p class="event-canceled-message">Tapahtumaan ei voi ilmoittautua koska se on peruttu.</p>
           {% else %}
           <a href="/event/{{event.id}}/register">Ilmoittaudu</a>
-          {% endif %} {% if session.user_id == event.user_id %}
+          {% endif %} {% endif %} {% if session.user_id == event.user_id %}
           <div class="event-top-bar__creator">
-            <a href="/edit/{{ event.id }}">Muokkaa</a>
-            <a href="/delete/{{ event.id }}">Poista</a>
+            <a href="/event/{{ event.id }}/edit">Muokkaa</a>
+            {% if not event.is_canceled %}
+            <a href="/event/{{ event.id }}/cancel">Peru</a>
+            {% endif %}
+            <a href="/event/{{ event.id }}/delete">Poista</a>
           </div>
           {% endif %}
         </div>
+        {% if event.is_canceled %}
+        <h1 class="event-title--canceled">{{event.title}}</h1>
+        {% else %}
         <h1 class="event-title">{{event.title}}</h1>
+        {% endif %}
         <div class="pill-list">
           <p class="pill-list__pill">
             Luonut: <a href="/user/{{event.user_id}}">{{event.username}}</a>
@@ -33,6 +42,7 @@
           {% endfor %}
         </div>
         <p class="event-description">{{event.description}}</p>
+        {% if not event.is_canceled %}
         <p class="event-participants__text">Tapahtumaan Ilmoittautuneet</p>
         {% if participants %}
         <div class="pill-list">
@@ -42,7 +52,7 @@
         </div>
         {% else %}
         <p>Ei ilmoittautuneita.</p>
-        {% endif %}
+        {% endif %} {% endif %}
       </div>
     </main>
   </body>
