@@ -20,94 +20,14 @@
           <div class="horizontal-divider"></div>
         </div>
       </div>
-      {% if not events %}
-      <p class="no-events-message">Ei tapahtumia.</p>
-      {% else %}
-      <ul class="event-items">
-        {% for event in events %} {% if event.is_canceled %}
-        <li class="event-item--canceled">
-          <div class="event-item__content">
-            <div class="event-item__main-info">
-              <p class="event-item__main-info__date">{{ event.date }}</p>
-              <div class="event-item__text">
-                <a href="/event/{{event.id}}" class="event-item__text__title">{{ event.title }}</a>
-                <p class="event-item__text__description">{{ event.description}}</p>
-              </div>
-            </div>
-            <div class="event-item__secondary-info">
-              <p>Ilmoittautuneet: {{ event.spots }}</p>
-              <p>Aika: {{ event.duration }}</p>
-              <p>Luonut: <a href="/user/{{event.user_id}}">{{ event.username }}</a></p>
-            </div>
-          </div>
-        </li>
-        {% else %}
-        <li class="event-item">
-          <div class="event-item__content">
-            <div class="event-item__main-info">
-              <p class="event-item__main-info__date">{{ event.date }}</p>
-              <div class="event-item__text">
-                <a href="/event/{{event.id}}" class="event-item__text__title">{{ event.title }}</a>
-                <p class="event-item__text__description">{{ event.description}}</p>
-              </div>
-            </div>
-            <div class="event-item__secondary-info">
-              <p>Ilmoittautuneet: {{ event.spots }}</p>
-              <p>Aika: {{ event.duration }}</p>
-              <p>Luonut: <a href="/user/{{event.user_id}}">{{ event.username }}</a></p>
-            </div>
-          </div>
-        </li>
-        {% endif%} {% endfor %}
-      </ul>
-      {% endif %}
+      {% include "event_list.html" %}
       <div class="main__content--user-page">
         <div class="user-section-divider">
           <p class="user-section-divider__text">Ilmoittautunut Tapahtumiin</p>
           <div class="horizontal-divider"></div>
         </div>
       </div>
-      {% if not participations %}
-      <p class="no-events-message">Ei tapahtumia.</p>
-      {% else %}
-      <ul class="event-items">
-        {% for event in participations %} {% if event.is_canceled %}
-        <li class="event-item--canceled">
-          <div class="event-item__content">
-            <div class="event-item__main-info">
-              <p class="event-item__main-info__date">{{ event.date }}</p>
-              <div class="event-item__text">
-                <a href="/event/{{event.id}}" class="event-item__text__title">{{ event.title }}</a>
-                <p class="event-item__text__description">{{ event.description}}</p>
-              </div>
-            </div>
-            <div class="event-item__secondary-info">
-              <p>Ilmoittautuneet: {{ event.spots }}</p>
-              <p>Aika: {{ event.duration }}</p>
-              <p>Luonut: <a href="/user/{{event.user_id}}">{{ event.username }}</a></p>
-            </div>
-          </div>
-        </li>
-        {% else %}
-        <li class="event-item">
-          <div class="event-item__content">
-            <div class="event-item__main-info">
-              <p class="event-item__main-info__date">{{ event.date }}</p>
-              <div class="event-item__text">
-                <a href="/event/{{event.id}}" class="event-item__text__title">{{ event.title }}</a>
-                <p class="event-item__text__description">{{ event.description}}</p>
-              </div>
-            </div>
-            <div class="event-item__secondary-info">
-              <p>Ilmoittautuneet: {{ event.spots }}</p>
-              <p>Aika: {{ event.duration }}</p>
-              <p>Luonut: <a href="/user/{{event.user_id}}">{{ event.username }}</a></p>
-            </div>
-          </div>
-        </li>
-        {% endif%} {% endfor %}
-      </ul>
-      {% endif %}
+      {% set events = participations %} {% include "event_list.html" %}
     </main>
   </body>
 </html>
