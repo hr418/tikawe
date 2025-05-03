@@ -6,7 +6,9 @@ from flask import Flask, render_template, request, session, redirect
 from werkzeug.security import generate_password_hash, check_password_hash
 import config
 import db
-import event_calendar
+import events
+import users
+import tags
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
@@ -38,9 +40,7 @@ def index():
 
     return render_template(
         "index.html",
-        events=list(
-            map(event_calendar.format_event_display, event_calendar.get_events())
-        ),
+        events=list(map(events.format_event_display, events.get_events())),
     )
 
 
@@ -220,13 +220,13 @@ def register():
 @app.route("/new_event", methods=["GET", "POST"])
 @require_login
 def new_event():
-    tags = event_calendar.get_tags()
+    available_tags = tags.get_tags()
 
     if request.method == "GET":
-        return render_template("new_event.html", tags=tags)
+        return render_template("new_event.html", tags=available_tags)
 
     if request.method == "POST":
-        form = event_calendar.event_form_handler(request.form, tags)
+        form = events.event_form_handler(request.form, available_tags)
 
         if form["error"]:
             return (
@@ -241,7 +241,7 @@ def new_event():
             )
 
         try:
-            event_calendar.add_event(
+            events.add_event(
                 form["title"],
                 form["description"],
                 form["start_epoch"],
@@ -273,7 +273,7 @@ def new_event():
 @app.route("/event/<int:event_id>/edit", methods=["GET", "POST"])
 @require_login
 def edit_event(event_id):
-    event = event_calendar.get_event(event_id)
+    event = events.get_event(event_id)
 
     if not event:
         return (
@@ -297,20 +297,20 @@ def edit_event(event_id):
             ),
             403,
         )
-    tags = event_calendar.get_tags()
+    available_tags = tags.get_tags()
 
     if request.method == "GET":
-        event_tags = event_calendar.get_event_tags(event_id)
+        event_tags = tags.get_event_tags(event_id)
 
         return render_template(
             "edit_event.html",
-            event=event_calendar.format_event_form(event),
-            tags=tags,
+            event=events.format_event_form(event),
+            tags=available_tags,
             event_tags=event_tags,
         )
 
     if request.method == "POST":
-        form = event_calendar.event_form_handler(request.form, tags)
+        form = events.event_form_handler(request.form, available_tags)
 
         if form["error"]:
             return (
@@ -325,7 +325,7 @@ def edit_event(event_id):
             )
 
         try:
-            event_calendar.edit_event(
+            events.edit_event(
                 event_id,
                 form["title"],
                 form["description"],
@@ -358,7 +358,7 @@ def edit_event(event_id):
 @app.route("/event/<int:event_id>/delete", methods=["GET", "POST"])
 @require_login
 def delete(event_id):
-    event = event_calendar.get_event(event_id)
+    event = events.get_event(event_id)
 
     if not event:
         return (
@@ -388,7 +388,7 @@ def delete(event_id):
     if request.method == "POST":
         if "continue" in request.form:
             try:
-                event_calendar.delete_event(event_id)
+                events.delete_event(event_id)
             except sqlite3.Error:
                 return (
                     render_template(
@@ -413,7 +413,7 @@ def delete(event_id):
 @app.route("/event/<int:event_id>")
 @require_login
 def event(event_id):
-    event = event_calendar.get_event(event_id)
+    event = events.get_event(event_id)
 
     if not event:
         return (
@@ -428,21 +428,17 @@ def event(event_id):
         )
     return render_template(
         "event.html",
-        event=event_calendar.format_event_display(event),
-        tags=event_calendar.format_tags_display(
-            event_calendar.get_event_tags(event_id)
-        ),
-        is_participant=event_calendar.is_event_participant(
-            event_id, session["user_id"]
-        ),
-        participants=event_calendar.get_event_participants(event_id),
+        event=events.format_event_display(event),
+        tags=tags.format_tags_display(tags.get_event_tags(event_id)),
+        is_participant=events.is_event_participant(event_id, session["user_id"]),
+        participants=events.get_event_participants(event_id),
     )
 
 
 @app.route("/event/<int:event_id>/register", methods=["POST", "GET"])
 @require_login
 def register_to_event(event_id):
-    event = event_calendar.get_event(event_id)
+    event = events.get_event(event_id)
 
     if not event:
         return (
@@ -480,7 +476,7 @@ def register_to_event(event_id):
             400,
         )
 
-    if event_calendar.is_event_participant(event_id, session["user_id"]):
+    if events.is_event_participant(event_id, session["user_id"]):
         return (
             render_template(
                 "message.html",
@@ -494,13 +490,13 @@ def register_to_event(event_id):
     if request.method == "GET":
         return render_template(
             "register_to_event.html",
-            event=event_calendar.format_event_display(event),
+            event=events.format_event_display(event),
         )
 
     if request.method == "POST":
         if "continue" in request.form:
             try:
-                event_calendar.register_to_event(event_id, session["user_id"])
+                events.register_to_event(event_id, session["user_id"])
             except sqlite3.Error:
                 return (
                     render_template(
@@ -526,7 +522,7 @@ def register_to_event(event_id):
 @app.route("/event/<int:event_id>/unregister", methods=["POST", "GET"])
 @require_login
 def unregister_from_event(event_id):
-    event = event_calendar.get_event(event_id)
+    event = events.get_event(event_id)
 
     if not event:
         return (
@@ -540,7 +536,7 @@ def unregister_from_event(event_id):
             404,
         )
 
-    if not event_calendar.is_event_participant(event_id, session["user_id"]):
+    if not events.is_event_participant(event_id, session["user_id"]):
         return (
             render_template(
                 "message.html",
@@ -555,13 +551,13 @@ def unregister_from_event(event_id):
     if request.method == "GET":
         return render_template(
             "unregister_from_event.html",
-            event=event_calendar.format_event_display(event),
+            event=events.format_event_display(event),
         )
 
     if request.method == "POST":
         if "continue" in request.form:
             try:
-                event_calendar.unregister_from_event(event_id, session["user_id"])
+                events.unregister_from_event(event_id, session["user_id"])
             except sqlite3.Error:
                 return (
                     render_template(
@@ -587,7 +583,7 @@ def unregister_from_event(event_id):
 @app.route("/user/<int:user_id>")
 @require_login
 def user(user_id):
-    user = event_calendar.get_user(user_id)
+    user = users.get_user(user_id)
 
     if not user:
         return (
@@ -606,14 +602,14 @@ def user(user_id):
         user=user,
         events=list(
             map(
-                event_calendar.format_event_display,
-                event_calendar.get_user_events(user_id),
+                events.format_event_display,
+                events.get_user_events(user_id),
             )
         ),
         participations=list(
             map(
-                event_calendar.format_event_display,
-                event_calendar.get_user_participations(user_id),
+                events.format_event_display,
+                events.get_user_participations(user_id),
             )
         ),
     )
@@ -622,7 +618,7 @@ def user(user_id):
 @app.route("/event/<int:event_id>/cancel", methods=["POST", "GET"])
 @require_login
 def cancel_event(event_id):
-    event = event_calendar.get_event(event_id)
+    event = events.get_event(event_id)
 
     if not event:
         return (
@@ -651,13 +647,13 @@ def cancel_event(event_id):
     if request.method == "GET":
         return render_template(
             "cancel_event.html",
-            event=event_calendar.format_event_display(event),
+            event=events.format_event_display(event),
         )
 
     if request.method == "POST":
         if "continue" in request.form:
             try:
-                event_calendar.cancel_event(event_id)
+                events.cancel_event(event_id)
             except sqlite3.Error:
                 return (
                     render_template(

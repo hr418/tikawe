@@ -1,5 +1,4 @@
 from datetime import datetime
-import math
 from flask import session
 import db
 
@@ -9,21 +8,24 @@ def get_events():
              FROM Events e, Users u
              WHERE e.start >= ? AND e.user = u.id
              ORDER BY e.start"""
-    return db.query(sql, [int(datetime.now().timestamp())])
+    result = db.query(sql, [int(datetime.now().timestamp())])
+    return result if result else None
 
 
 def get_event(event_id):
     sql = """SELECT e.id, e.title, e.description, e.start, e.end, e.spots, e.registeredCount, e.isCanceled, u.username, u.id AS user_id
              FROM Events e, users u
              WHERE e.id =? AND e.user = u.id"""
-    return db.query(sql, [event_id])[0] if db.query(sql, [event_id]) else None
+    result = db.query(sql, [event_id])
+    return result[0] if result else None
 
 
 def get_event_participants(event_id):
     sql = """SELECT u.username, u.id
              FROM EventParticipants ep, Users u
              WHERE ep.event = ? AND ep.user = u.id"""
-    return db.query(sql, [event_id]) if db.query(sql, [event_id]) else None
+    result = db.query(sql, [event_id])
+    return result if result else None
 
 
 def get_user_events(user_id):
@@ -31,7 +33,8 @@ def get_user_events(user_id):
              FROM Events e, Users u
              WHERE e.user = ? AND e.start >= ? AND e.user = u.id
              ORDER BY e.start"""
-    return db.query(sql, [user_id, int(datetime.now().timestamp())])
+    result = db.query(sql, [user_id, int(datetime.now().timestamp())])
+    return result if result else None
 
 
 def get_user_participations(user_id):
@@ -39,35 +42,8 @@ def get_user_participations(user_id):
              FROM EventParticipants ep, Events e, Users u
              WHERE ep.user = ? AND ep.event = e.id AND e.user = u.id AND e.start >= ?
              ORDER BY e.start"""
-    return db.query(sql, [user_id, int(datetime.now().timestamp())])
-
-
-def get_user(user_id):
-    sql = """SELECT u.id, u.username, u.createdAt
-             FROM Users u
-             WHERE u.id = ?"""
-
-    user = db.query(sql, [user_id])[0] if db.query(sql, [user_id]) else None
-
-    if not user:
-        return None
-
-    sql = """SELECT COUNT(e.id) AS event_count, IFNULL(SUM(e.registeredCount), 0) AS total_participants
-             FROM Events e
-             WHERE e.user = ? AND e.start >= ?"""
-    statistics = db.query(sql, [user_id, int(datetime.now().timestamp())])[0]
-
-    account_age = math.floor(
-        (datetime.now().timestamp() - user["createdAt"]) / 86400
-    )  # seconds to days
-
-    return {
-        "id": user["id"],
-        "username": user["username"],
-        "event_count": statistics["event_count"],
-        "total_participants": statistics["total_participants"],
-        "account_age": account_age,
-    }
+    result = db.query(sql, [user_id, int(datetime.now().timestamp())])
+    return result if result else None
 
 
 def add_event(title, description, start, end, spots, tags):
@@ -131,31 +107,6 @@ def delete_event(event_id):
     db.execute(sql, [event_id])
 
 
-def get_tags():
-    sql = """SELECT t.title, t.value
-             FROM Tags t"""
-    tags = db.query(sql)
-
-    result = {}
-    for tag in tags:
-        if tag["title"] not in result:
-            result[tag["title"]] = []
-        result[tag["title"]].append(tag["value"])
-    return result
-
-
-def get_event_tags(event_id):
-    sql = """SELECT t.title, t.value
-             FROM EventTags t
-             WHERE t.event = ?"""
-    tags = db.query(sql, [event_id])
-
-    result = {}
-    for tag in tags:
-        result[tag["title"]] = tag["value"]
-    return result
-
-
 # Formats event attributes for display
 def format_event_display(event):
     start = datetime.fromtimestamp(event["start"])
@@ -178,13 +129,6 @@ def format_event_display(event):
         f"{start.strftime("%d/%m/%Y %H:%M")} - {end.strftime("%d/%m/%Y %H:%M")}"
     )
 
-    return result
-
-
-def format_tags_display(tags):
-    result = []
-    for tag, value in tags.items():
-        result.append(f"{tag}: {value}")
     return result
 
 
