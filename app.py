@@ -127,14 +127,8 @@ def register():
                 ),
                 500,
             )
-
-        return render_template(
-            "message.html",
-            title="Onnistui",
-            redirect_text="Kirjaudu",
-            message="Käyttäjä luotu.",
-            redirect="/login",
-        )
+        flash("Käyttäjä luotu. Voit nyt kirjautua sisään.")
+        return redirect("/login")
 
 
 @app.route("/new_event", methods=["GET", "POST"])
