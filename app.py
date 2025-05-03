@@ -1,10 +1,8 @@
 import sqlite3
-import secrets
 import re
 from datetime import datetime
 from functools import wraps
 from flask import Flask, render_template, request, session, redirect
-from werkzeug.security import generate_password_hash, check_password_hash
 import config
 import db
 import events
@@ -71,56 +69,24 @@ def login():
     if request.method == "GET":
         return render_template("login.html")
     if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-
-        if not username or not password:
+        user = users.login_form_handler(request.form)
+        if user["error"]:
             return (
                 render_template(
                     "message.html",
                     title="Virhe",
                     redirect_text="Takaisin",
-                    message="Kaikki kentät ovat pakollisia.",
+                    message=user["error"],
                     redirect="/login",
                 ),
                 400,
             )
 
-        sql = "SELECT passwordHash FROM users WHERE username = ?"
+        session["user_id"] = user["user_id"]
+        session["username"] = user["username"]
+        session["csrf_token"] = user["csrf_token"]
 
-        result = db.query(sql, [username])
-
-        if not result:
-            return (
-                render_template(
-                    "message.html",
-                    title="Virhe",
-                    redirect_text="Takaisin",
-                    message="Väärä tunnus tai salasana.",
-                    redirect="/",
-                ),
-                401,
-            )
-
-        if check_password_hash(result[0][0], password):
-            sql = "SELECT id FROM users WHERE username = ?"
-
-            result = db.query(sql, [username])
-            session["user_id"] = result[0][0]
-            session["username"] = username
-            session["csrf_token"] = secrets.token_hex(16)
-            return redirect("/")
-
-        return (
-            render_template(
-                "message.html",
-                title="Virhe",
-                redirect_text="Takaisin",
-                message="Väärä tunnus tai salasana.",
-                redirect="/",
-            ),
-            401,
-        )
+        return redirect("/")
 
 
 @app.route("/logout")
@@ -137,89 +103,32 @@ def register():
     if request.method == "GET":
         return render_template("register.html")
     if request.method == "POST":
-        username = request.form["username"]
-        password1 = request.form["password1"]
-        password2 = request.form["password2"]
+        user = users.register_form_handler(request.form)
 
-        if not username or not password1 or not password2:
+        if user["error"]:
             return (
                 render_template(
                     "message.html",
                     title="Virhe",
                     redirect_text="Takaisin",
-                    message="Kaikki kentät ovat pakollisia.",
+                    message=user["error"],
                     redirect="/register",
                 ),
                 400,
             )
-
-        if password1 != password2:
-            return (
-                render_template(
-                    "message.html",
-                    title="Virhe",
-                    redirect_text="Takaisin",
-                    message="Salasanat eivät täsmää.",
-                    redirect="/register",
-                ),
-                400,
-            )
-
-        if len(password1) < 8:
-            return (
-                render_template(
-                    "message.html",
-                    title="Virhe",
-                    redirect_text="Takaisin",
-                    message="Salasana ei ole tarpeeksi pitkä.",
-                    redirect="/register",
-                ),
-                400,
-            )
-        if len(password1) > 30:
-            return (
-                render_template(
-                    "message.html",
-                    title="Virhe",
-                    redirect_text="Takaisin",
-                    message="Salasana ei voi olla pidempi kuin 30 merkkiä.",
-                    redirect="/register",
-                ),
-                400,
-            )
-        if len(username) > 30:
-            return (
-                render_template(
-                    "message.html",
-                    title="Virhe",
-                    redirect_text="Takaisin",
-                    message="Tunnus ei voi olla pidempi kuin 30 merkkiä.",
-                    redirect="/register",
-                ),
-                400,
-            )
-        # Check if username contains more than one consequtive space, space as the first character, space as the last character, or illegal characters
-        if re.search(r"\s{2,}|^ | $", username) or not re.fullmatch(
-            r"^[a-öA-Ö0-9_]+$", username
-        ):
-            return (
-                render_template(
-                    "message.html",
-                    title="Virhe",
-                    redirect_text="Takaisin",
-                    message="Tunnus ei kelpaa.",
-                    redirect="/register",
-                ),
-                400,
-            )
-
-        password_hash = generate_password_hash(password1)
 
         try:
             sql = (
                 "INSERT INTO users (username, passwordHash, createdAt) VALUES (?, ?, ?)"
             )
-            db.execute(sql, [username, password_hash, int(datetime.now().timestamp())])
+            db.execute(
+                sql,
+                [
+                    user["username"],
+                    user["password_hash"],
+                    int(datetime.now().timestamp()),
+                ],
+            )
         except sqlite3.IntegrityError:
             return (
                 render_template(
@@ -235,7 +144,7 @@ def register():
         return render_template(
             "message.html",
             title="Onnistui",
-            redirect_text="Etusivulle",
+            redirect_text="Kirjaudu",
             message="Käyttäjä luotu.",
             redirect="/",
         )

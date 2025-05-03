@@ -1,5 +1,8 @@
 from datetime import datetime
 import math
+import re
+import secrets
+from werkzeug.security import check_password_hash, generate_password_hash
 import db
 
 
@@ -28,4 +31,64 @@ def get_user(user_id):
         "event_count": statistics["event_count"],
         "total_participants": statistics["total_participants"],
         "account_age": account_age,
+    }
+
+
+def login_form_handler(form):
+    username = form["username"]
+    password = form["password"]
+
+    if not username or not password:
+        return {"error": "Kaikki kentät ovat pakollisia."}
+
+    sql = "SELECT passwordHash FROM users WHERE username = ?"
+    result = db.query(sql, [username])
+
+    if not result:
+        return {"error": "Väärä tunnus tai salasana."}
+
+    if check_password_hash(result[0][0], password):
+        sql = "SELECT id FROM users WHERE username = ?"
+
+        result = db.query(sql, [username])
+        return {
+            "error": None,
+            "user_id": result[0][0],
+            "username": username,
+            "csrf_token": secrets.token_hex(16),
+        }
+
+    return {"error": "Väärä tunnus tai salasana."}
+
+
+def register_form_handler(form):
+    username = form["username"]
+    password1 = form["password1"]
+    password2 = form["password2"]
+
+    if not username or not password1 or not password2:
+        return {"error": "Kaikki kentät ovat pakollisia."}
+
+    if password1 != password2:
+        return {"error": "Salasanat eivät täsmää."}
+
+    if len(password1) < 8:
+        return {"error": "Salasana ei ole tarpeeksi pitkä."}
+
+    if len(password1) > 30:
+        return {"error": "Salasana ei voi olla pidempi kuin 30 merkkiä."}
+
+    if len(username) > 30:
+        return {"error": "Tunnus ei voi olla pidempi kuin 30 merkkiä."}
+
+    # Check if username contains more than one consequtive space, space as the first character, space as the last character, or illegal characters
+    if re.search(r"\s{2,}|^ | $", username) or not re.fullmatch(
+        r"^[a-öA-Ö0-9_]+$", username
+    ):
+        return {"error": "Tunnus ei kelpaa."}
+
+    return {
+        "error": None,
+        "username": username,
+        "password_hash": generate_password_hash(password1),
     }
