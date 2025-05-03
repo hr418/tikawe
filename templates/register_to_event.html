@@ -8,6 +8,7 @@
   <body>
     {% include "nav.html" %}
     <main class="main">
+      {% include "page_messages.html" %}
       <div class="main__content">
         <p>Olet ilmoittautumassa tapahtumaan {{event.title}}</p>
         <form class="form" action="/event/{{ event.id }}/register" method="post">

@@ -1,8 +1,7 @@
 import sqlite3
-import re
 from datetime import datetime
 from functools import wraps
-from flask import Flask, render_template, request, session, redirect
+from flask import Flask, render_template, request, session, redirect, flash
 import config
 import db
 import events
@@ -42,7 +41,7 @@ def check_csrf_token(f):
                     render_template(
                         "message.html",
                         title="Virhe",
-                        redirect_text="Takaisin",
+                        redirect_text="Etusivulle",
                         message="CSRF esto.",
                         redirect="/",
                     ),
@@ -70,17 +69,10 @@ def login():
         return render_template("login.html")
     if request.method == "POST":
         user = users.login_form_handler(request.form)
+
         if user["error"]:
-            return (
-                render_template(
-                    "message.html",
-                    title="Virhe",
-                    redirect_text="Takaisin",
-                    message=user["error"],
-                    redirect="/login",
-                ),
-                400,
-            )
+            flash("!" + user["error"])
+            return redirect("/login")
 
         session["user_id"] = user["user_id"]
         session["username"] = user["username"]
@@ -106,16 +98,8 @@ def register():
         user = users.register_form_handler(request.form)
 
         if user["error"]:
-            return (
-                render_template(
-                    "message.html",
-                    title="Virhe",
-                    redirect_text="Takaisin",
-                    message=user["error"],
-                    redirect="/register",
-                ),
-                400,
-            )
+            flash("!" + user["error"])
+            return redirect("/register")
 
         try:
             sql = (
@@ -129,16 +113,19 @@ def register():
                     int(datetime.now().timestamp()),
                 ],
             )
-        except sqlite3.IntegrityError:
+        except sqlite3.Error as e:
+            if "UNIQUE constraint failed" in str(e):
+                flash("!Tunnus on jo olemassa.")
+                return redirect("/register")
             return (
                 render_template(
                     "message.html",
                     title="Virhe",
                     redirect_text="Takaisin",
-                    message="Tunnus on jo olemassa.",
+                    message="Tuntemattomasta syystä, käyttäjää ei voitu luoda.",
                     redirect="/register",
                 ),
-                409,
+                500,
             )
 
         return render_template(
@@ -146,7 +133,7 @@ def register():
             title="Onnistui",
             redirect_text="Kirjaudu",
             message="Käyttäjä luotu.",
-            redirect="/",
+            redirect="/login",
         )
 
 
@@ -163,16 +150,8 @@ def new_event():
         form = events.event_form_handler(request.form, available_tags)
 
         if form["error"]:
-            return (
-                render_template(
-                    "message.html",
-                    title="Virhe",
-                    redirect_text="Takaisin",
-                    message=form["error"],
-                    redirect="/new_event",
-                ),
-                400,
-            )
+            flash("!" + form["error"])
+            return redirect("/new_event")
 
         try:
             events.add_event(
@@ -195,13 +174,9 @@ def new_event():
                 ),
                 500,
             )
-        return render_template(
-            "message.html",
-            title="Onnistui",
-            redirect_text="Etusivulle",
-            message="Tapahtuma luotu.",
-            redirect="/",
-        )
+
+        flash("Tapahtuma luotu.")
+        return redirect(f"/event/{db.last_insert_id()}")
 
 
 @app.route("/event/<int:event_id>/edit", methods=["GET", "POST"])
@@ -248,16 +223,8 @@ def edit_event(event_id):
         form = events.event_form_handler(request.form, available_tags)
 
         if form["error"]:
-            return (
-                render_template(
-                    "message.html",
-                    title="Virhe",
-                    redirect_text="Takaisin",
-                    message=form["error"],
-                    redirect="/new_event",
-                ),
-                400,
-            )
+            flash("!" + form["error"])
+            return redirect(f"/edit/{event_id}")
 
         try:
             events.edit_event(
@@ -280,14 +247,8 @@ def edit_event(event_id):
                 ),
                 500,
             )
-
-        return render_template(
-            "message.html",
-            title="Onnistui",
-            redirect_text="Etusivulle",
-            message="Tapahtuma päivitetty.",
-            redirect="/",
-        )
+        flash("Tapahtuma päivitetty.")
+        return redirect(f"/event/{event_id}")
 
 
 @app.route("/event/<int:event_id>/delete", methods=["GET", "POST"])
@@ -336,13 +297,8 @@ def delete(event_id):
                     ),
                     500,
                 )
-            return render_template(
-                "message.html",
-                title="Onnistui",
-                redirect_text="Etusivulle",
-                message="Viesti poistettu.",
-                redirect="/",
-            )
+            flash("Tapahtuma poistettu.")
+            return redirect("/")
         return redirect("/")
 
 
@@ -402,28 +358,13 @@ def register_to_event(event_id):
         )
 
     if event["spots"] and event["registeredCount"] >= event["spots"]:
-        return (
-            render_template(
-                "message.html",
-                title="Virhe",
-                redirect_text="Takaisin",
-                message="Tapahtuma on täynnä.",
-                redirect=f"/event/{event_id}",
-            ),
-            400,
-        )
+        flash("!Tapahtuma on täynnä.")
+        return redirect(f"/event/{event_id}")
 
     if events.is_event_participant(event_id, session["user_id"]):
-        return (
-            render_template(
-                "message.html",
-                title="Virhe",
-                redirect_text="Takaisin",
-                message="Olet jo ilmoittautunut tapahtumaan.",
-                redirect=f"/event/{event_id}",
-            ),
-            400,
-        )
+        flash("!Olet jo ilmoittautunut tapahtumaan.")
+        return redirect(f"/event/{event_id}")
+
     if request.method == "GET":
         return render_template(
             "register_to_event.html",
@@ -445,13 +386,8 @@ def register_to_event(event_id):
                     ),
                     500,
                 )
-            return render_template(
-                "message.html",
-                title="Onnistui",
-                redirect_text="Etusivulle",
-                message="Ilmoittautuminen onnistui.",
-                redirect="/",
-            )
+            flash("Ilmoittautuminen onnistui.")
+            return redirect(f"/event/{event_id}")
         if "cancel" in request.form:
             return redirect(f"/event/{event_id}")
 
@@ -507,13 +443,8 @@ def unregister_from_event(event_id):
                     ),
                     500,
                 )
-            return render_template(
-                "message.html",
-                title="Onnistui",
-                redirect_text="Etusivulle",
-                message="Ilmoittautumisesi on peruttu.",
-                redirect="/",
-            )
+            flash("Ilmoittautuminen peruttu.")
+            return redirect(f"/event/{event_id}")
         if "cancel" in request.form:
             return redirect(f"/event/{event_id}")
 
@@ -604,12 +535,7 @@ def cancel_event(event_id):
                     ),
                     500,
                 )
-            return render_template(
-                "message.html",
-                title="Onnistui",
-                redirect_text="Etusivulle",
-                message="Tapahtuma peruttu.",
-                redirect="/",
-            )
+            flash("Tapahtuma peruttu.")
+            return redirect(f"/event/{event_id}")
         if "cancel" in request.form:
             return redirect(f"/event/{event_id}")

@@ -46,7 +46,7 @@ body {
 }
 
 .form__required {
-  color: red;
+  color: #b00020;
 }
 
 .header {
@@ -80,11 +80,11 @@ body {
   width: 100%;
 }
 
-.event-item:nth-child(odd) {
+.event-item:nth-child(even) {
   background-color: #f6f6f6;
 }
 
-.event-item--canceled:nth-child(odd) {
+.event-item--canceled:nth-child(even) {
   background-color: #f6f6f6;
 }
 
@@ -239,4 +239,26 @@ body {
 .user-title {
   margin: 0;
   margin-top: 1rem;
+}
+
+.page-messages {
+  margin: 0;
+  list-style: none;
+  max-width: 50rem;
+  flex-grow: 1;
+  width: 100%;
+  padding-inline: 1rem;
+}
+
+.page-messages__message:last-child {
+  margin-bottom: 1rem;
+}
+
+.page-messages__message {
+  margin-top: 1rem;
+}
+
+.page-messages__message--error {
+  margin-top: 1rem;
+  color: #b00020;
 }

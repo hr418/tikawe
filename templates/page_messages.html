@@ -1,0 +1,10 @@
+<ul class="page-messages">
+  {% with messages = get_flashed_messages() %} {% for message in messages %} {% if
+  message.startswith('!') %}
+  <li class="page-messages__message--error">{{ message[1:] }}</li>
+  {% else %}
+  <li class="page-messages__message">{{ message }}</li>
+  {% endif %} {% endfor %} {% if messages %}
+  <div class="horizontal-divider"></div>
+  {% endif %} {% endwith %}
+</ul>
