@@ -1,4 +1,5 @@
 import sqlite3
+import secrets
 import re
 from datetime import datetime
 from functools import wraps
@@ -28,6 +29,27 @@ def require_login(f):
                 ),
                 401,
             )
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+
+def check_csrf_token(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if request.method == "POST":
+            csrf_token = request.form.get("csrf_token")
+            if csrf_token != session.get("csrf_token"):
+                return (
+                    render_template(
+                        "message.html",
+                        title="Virhe",
+                        redirect_text="Takaisin",
+                        message="CSRF esto.",
+                        redirect="/",
+                    ),
+                    403,
+                )
         return f(*args, **kwargs)
 
     return decorated_function
@@ -86,6 +108,7 @@ def login():
             result = db.query(sql, [username])
             session["user_id"] = result[0][0]
             session["username"] = username
+            session["csrf_token"] = secrets.token_hex(16)
             return redirect("/")
 
         return (
@@ -102,6 +125,7 @@ def login():
 
 @app.route("/logout")
 @require_login
+@check_csrf_token
 def logout():
     del session["user_id"]
     del session["username"]
@@ -219,6 +243,7 @@ def register():
 
 @app.route("/new_event", methods=["GET", "POST"])
 @require_login
+@check_csrf_token
 def new_event():
     available_tags = tags.get_tags()
 
@@ -272,6 +297,7 @@ def new_event():
 
 @app.route("/event/<int:event_id>/edit", methods=["GET", "POST"])
 @require_login
+@check_csrf_token
 def edit_event(event_id):
     event = events.get_event(event_id)
 
@@ -357,6 +383,7 @@ def edit_event(event_id):
 
 @app.route("/event/<int:event_id>/delete", methods=["GET", "POST"])
 @require_login
+@check_csrf_token
 def delete(event_id):
     event = events.get_event(event_id)
 
@@ -437,6 +464,7 @@ def event(event_id):
 
 @app.route("/event/<int:event_id>/register", methods=["POST", "GET"])
 @require_login
+@check_csrf_token
 def register_to_event(event_id):
     event = events.get_event(event_id)
 
@@ -521,6 +549,7 @@ def register_to_event(event_id):
 
 @app.route("/event/<int:event_id>/unregister", methods=["POST", "GET"])
 @require_login
+@check_csrf_token
 def unregister_from_event(event_id):
     event = events.get_event(event_id)
 
@@ -617,6 +646,7 @@ def user(user_id):
 
 @app.route("/event/<int:event_id>/cancel", methods=["POST", "GET"])
 @require_login
+@check_csrf_token
 def cancel_event(event_id):
     event = events.get_event(event_id)
 

@@ -12,6 +12,7 @@
         <p>Olet perumassa ilmoittautumisesi tapahtumaan {{event.title}}</p>
         <form class="form" action="/event/{{ event.id }}/unregister" method="post">
           <input type="submit" name="continue" value="Vahvista" />
+          <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
           <input type="submit" name="cancel" value="Peruuta" />
         </form>
       </div>

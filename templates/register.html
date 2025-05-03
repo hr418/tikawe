@@ -33,6 +33,7 @@
             <input maxlength="30" required type="password" name="password2" id="password2" />
           </div>
 
+          <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
           <input type="submit" value="Luo tunnus" />
         </form>
       </div>

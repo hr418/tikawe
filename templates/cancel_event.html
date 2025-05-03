@@ -12,6 +12,7 @@
         <p>Haluatko varmasti perua tapahtuman {{event.title}}? Muutosta ei voi perua.</p>
         <form class="form" action="/event/{{ event.id }}/cancel" method="post">
           <input type="submit" name="continue" value="Kyllä" />
+          <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
           <input type="submit" name="cancel" value="Ei" />
         </form>
       </div>

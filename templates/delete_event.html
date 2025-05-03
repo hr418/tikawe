@@ -12,6 +12,7 @@
         <p>Haluatko varmasti poistaa tapahtuman?</p>
         <form class="form" action="/event/{{ event_id }}/delete" method="post">
           <input type="submit" name="continue" value="Jatka" />
+          <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
           <input type="submit" name="cancel" value="Peruuta" />
         </form>
       </div>
