@@ -9,7 +9,7 @@ def get_events():
              WHERE e.start >= ? AND e.user = u.id
              ORDER BY e.start"""
     result = db.query(sql, [int(datetime.now().timestamp())])
-    return result if result else None
+    return result if result else []
 
 
 def get_event(event_id):
@@ -25,7 +25,7 @@ def get_event_participants(event_id):
              FROM EventParticipants ep, Users u
              WHERE ep.event = ? AND ep.user = u.id"""
     result = db.query(sql, [event_id])
-    return result if result else None
+    return result if result else []
 
 
 def get_user_events(user_id):
@@ -34,7 +34,7 @@ def get_user_events(user_id):
              WHERE e.user = ? AND e.start >= ? AND e.user = u.id
              ORDER BY e.start"""
     result = db.query(sql, [user_id, int(datetime.now().timestamp())])
-    return result if result else None
+    return result if result else []
 
 
 def get_user_participations(user_id):
@@ -43,7 +43,7 @@ def get_user_participations(user_id):
              WHERE ep.user = ? AND ep.event = e.id AND e.user = u.id AND e.start >= ?
              ORDER BY e.start"""
     result = db.query(sql, [user_id, int(datetime.now().timestamp())])
-    return result if result else None
+    return result if result else []
 
 
 def add_event(title, description, start, end, spots, tags):
