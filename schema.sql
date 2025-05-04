@@ -37,3 +37,7 @@ CREATE TABLE EventTags (
     title TEXT,
     value TEXT
 );
+
+CREATE INDEX idx_event_user ON Events (user);
+CREATE INDEX idx_event_participant ON EventParticipants (event);
+CREATE INDEX idx_event_tag ON EventTags (event);
