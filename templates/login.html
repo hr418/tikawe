@@ -13,11 +13,23 @@
         <form action="/login" method="post" class="form">
           <div>
             <label for="username">Tunnus: <span class="form__required">*</span></label> <br />
-            <input maxlength="30" required type="text" name="username" id="username" />
+            <input
+              value="{{filled.username}}"
+              maxlength="30"
+              required
+              type="text"
+              name="username"
+              id="username" />
           </div>
           <div>
             <label for="password">Salasana: <span class="form__required">*</span></label> <br />
-            <input maxlength="30" required type="password" name="password" id="password" />
+            <input
+              value="{{filled.password}}"
+              maxlength="30"
+              required
+              type="password"
+              name="password"
+              id="password" />
           </div>
           <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
           <input type="submit" value="Kirjaudu" />

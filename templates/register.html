@@ -20,18 +20,36 @@
 
           <div>
             <label for="username">Tunnus: <span class="form__required">*</span></label> <br />
-            <input maxlength="30" required type="text" name="username" id="username" />
+            <input
+              value="{{filled.username}}"
+              maxlength="30"
+              required
+              type="text"
+              name="username"
+              id="username" />
           </div>
 
           <div>
             <label for="password1">Salasana: <span class="form__required">*</span></label> <br />
-            <input maxlength="30" required type="password" name="password1" id="password1" />
+            <input
+              value="{{filled.password1}}"
+              maxlength="30"
+              required
+              type="password"
+              name="password1"
+              id="password1" />
           </div>
 
           <div>
             <label for="password2">Salasana uudestaan: <span class="form__required">*</span></label>
             <br />
-            <input maxlength="30" required type="password" name="password2" id="password2" />
+            <input
+              value="{{filled.password2}}"
+              maxlength="30"
+              required
+              type="password"
+              name="password2"
+              id="password2" />
           </div>
 
           <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />

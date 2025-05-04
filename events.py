@@ -57,6 +57,8 @@ def add_event(title, description, start, end, spots, tags):
     for tag, value in tags.items():
         db.execute(sql, [event_id, tag, value])
 
+    return event_id
+
 
 def edit_event(event_id, title, description, start, end, spots, tags):
     sql = "DELETE FROM EventTags WHERE event = ?"
@@ -160,6 +162,33 @@ def event_form_handler(form, possible_tags):
     end_time = form["end_time"]
     spots = form["spots"]
 
+    filled = {
+        "title": title,
+        "description": description,
+        "start_date": start_date,
+        "start_time": start_time,
+        "end_date": end_date,
+        "end_time": end_time,
+        "spots": spots,
+        "tags": {},
+    }
+
+    event_tags = {}
+    tag_error = ""
+
+    for tag in possible_tags:
+        if tag not in form or form[tag] == "not_specified":
+            continue
+        tag_value = form[tag]
+        if tag_value not in possible_tags[tag]:
+            tag_error = f"Luokittelun {tag} arvo '{tag_value}' ei ole sallittu."
+            continue
+        event_tags[tag] = tag_value
+        filled["tags"][tag] = tag_value
+
+    if tag_error:
+        return {"error": tag_error, "filled": filled}
+
     if (
         not title
         or not description
@@ -168,22 +197,34 @@ def event_form_handler(form, possible_tags):
         or not end_date
         or not end_time
     ):
-        return {"error": "Varmista että kaikki pakolliset kentät ovat täytetty."}
+        return {
+            "error": "Varmista että kaikki pakolliset kentät ovat täytetty.",
+            "filled": filled,
+        }
 
     if len(title) > 50:
-        return {"error": "Otsikko ei voi olla pidempi kuin 50 merkkiä."}
+        return {
+            "error": "Otsikko ei voi olla pidempi kuin 50 merkkiä.",
+            "filled": filled,
+        }
 
     if len(description) > 5000:
-        return {"error": "Kuvaus ei voi olla pidempi kuin 5000 merkkiä."}
+        return {
+            "error": "Kuvaus ei voi olla pidempi kuin 5000 merkkiä.",
+            "filled": filled,
+        }
 
     if spots and not spots.isdigit():
-        return {"error": "Paikkojen määrä on oltava numero."}
+        return {"error": "Paikkojen määrä on oltava numero.", "filled": filled}
 
     if spots and int(spots) < 1:
-        return {"error": "Paikkojen määrä on oltava suurempi kuin 0."}
+        return {"error": "Paikkojen määrä on oltava suurempi kuin 0.", "filled": filled}
 
     if spots and int(spots) > 9999999:
-        return {"error": "Paikkojen määrä ei voi olla suurempi kuin 9999999."}
+        return {
+            "error": "Paikkojen määrä ei voi olla suurempi kuin 9999999.",
+            "filled": filled,
+        }
 
     start_epoch = datetime.strptime(
         f"{start_date} {start_time}", "%Y-%m-%d %H:%M"
@@ -197,23 +238,19 @@ def event_form_handler(form, possible_tags):
         or end_epoch > datetime.now().timestamp() + 315569260
     ):
         # 315569260 seconds = 10 years
-        return {"error": "Tapahtuma ei voi alkaa tai loppua yli 10 vuoden päästä."}
+        return {
+            "error": "Tapahtuma ei voi alkaa tai loppua yli 10 vuoden päästä.",
+            "filled": filled,
+        }
 
     if start_epoch < datetime.now().timestamp():
-        return {"error": "Tapahtuma ei voi alkaa menneisyydessä."}
+        return {"error": "Tapahtuma ei voi alkaa menneisyydessä.", "filled": filled}
 
     if end_epoch < start_epoch:
-        return {"error": "Tapahtuma ei voi loppua, sen jälkeen kun se on alkanut."}
-
-    event_tags = {}
-
-    for tag in possible_tags:
-        if tag not in form or form[tag] == "not_specified":
-            continue
-        tag_value = form[tag]
-        if tag_value not in possible_tags[tag]:
-            return {"error": f"Luokittelun {tag} arvo '{tag_value}' ei ole sallittu."}
-        event_tags[tag] = tag_value
+        return {
+            "error": "Tapahtuma ei voi loppua, sen jälkeen kun se on alkanut.",
+            "filled": filled,
+        }
 
     return {
         "title": title,
@@ -223,4 +260,5 @@ def event_form_handler(form, possible_tags):
         "spots": None if not spots else int(spots),
         "tags": event_tags,
         "error": None,
+        "filled": filled,
     }

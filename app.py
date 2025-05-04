@@ -66,13 +66,13 @@ def index():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "GET":
-        return render_template("login.html")
+        return render_template("login.html", filled={})
     if request.method == "POST":
         user = users.login_form_handler(request.form)
 
         if user["error"]:
             flash("!" + user["error"])
-            return redirect("/login")
+            return render_template("login.html", filled=user["filled"])
 
         session["user_id"] = user["user_id"]
         session["username"] = user["username"]
@@ -93,13 +93,13 @@ def logout():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "GET":
-        return render_template("register.html")
+        return render_template("register.html", filled={})
     if request.method == "POST":
         user = users.register_form_handler(request.form)
 
         if user["error"]:
             flash("!" + user["error"])
-            return redirect("/register")
+            return render_template("register.html", filled=user["filled"])
 
         try:
             sql = (
@@ -116,17 +116,10 @@ def register():
         except sqlite3.Error as e:
             if "UNIQUE constraint failed" in str(e):
                 flash("!Tunnus on jo olemassa.")
-                return redirect("/register")
-            return (
-                render_template(
-                    "message.html",
-                    title="Virhe",
-                    redirect_text="Takaisin",
-                    message="Tuntemattomasta syystä, käyttäjää ei voitu luoda.",
-                    redirect="/register",
-                ),
-                500,
-            )
+                return render_template("register.html", filled=user["filled"])
+            flash("!Tuntemattomasta syystä, käyttäjää ei voitu luoda.")
+            return render_template("register.html", filled=user["filled"])
+
         flash("Käyttäjä luotu. Voit nyt kirjautua sisään.")
         return redirect("/login")
 
@@ -138,17 +131,21 @@ def new_event():
     available_tags = tags.get_tags()
 
     if request.method == "GET":
-        return render_template("new_event.html", tags=available_tags)
+        return render_template(
+            "new_event.html", tags=available_tags, filled={"tags": {}}
+        )
 
     if request.method == "POST":
         form = events.event_form_handler(request.form, available_tags)
 
         if form["error"]:
             flash("!" + form["error"])
-            return redirect("/new_event")
+            return render_template(
+                "new_event.html", tags=available_tags, filled=form["filled"]
+            )
 
         try:
-            events.add_event(
+            event_id = events.add_event(
                 form["title"],
                 form["description"],
                 form["start_epoch"],
@@ -157,20 +154,13 @@ def new_event():
                 form["tags"],
             )
         except sqlite3.Error:
-
-            return (
-                render_template(
-                    "message.html",
-                    title="Virhe",
-                    redirect_text="Takaisin",
-                    message="Tuntemattomasta syystä, tapahtumaa ei voitu lisätä tietokantaan.",
-                    redirect="/new_event",
-                ),
-                500,
+            flash("!Tuntemattomasta syystä, tapahtumaa ei voitu lisätä tietokantaan.")
+            return render_template(
+                "new_event.html", tags=available_tags, filled=form["filled"]
             )
 
         flash("Tapahtuma luotu.")
-        return redirect(f"/event/{db.last_insert_id()}")
+        return redirect(f"/event/{event_id}")
 
 
 @app.route("/event/<int:event_id>/edit", methods=["GET", "POST"])
@@ -184,7 +174,7 @@ def edit_event(event_id):
             render_template(
                 "message.html",
                 title="Virhe",
-                redirect_text="Takaisin",
+                redirect_text="Etusivulle",
                 message="Tapahtuma on poistettu tai sitä ei ole olemassa.",
                 redirect="/",
             ),
@@ -195,7 +185,7 @@ def edit_event(event_id):
             render_template(
                 "message.html",
                 title="Virhe",
-                redirect_text="Takaisin",
+                redirect_text="Etusivulle",
                 message="Sinulla ei ole oikeuksia muokata tätä tapahtumaa.",
                 redirect="/",
             ),
@@ -204,13 +194,14 @@ def edit_event(event_id):
     available_tags = tags.get_tags()
 
     if request.method == "GET":
-        event_tags = tags.get_event_tags(event_id)
+        filled = events.format_event_form(event)
+        filled["tags"] = tags.get_event_tags(event_id)
 
         return render_template(
             "edit_event.html",
-            event=events.format_event_form(event),
+            filled=filled,
             tags=available_tags,
-            event_tags=event_tags,
+            event_id=event_id,
         )
 
     if request.method == "POST":
@@ -218,7 +209,12 @@ def edit_event(event_id):
 
         if form["error"]:
             flash("!" + form["error"])
-            return redirect(f"/edit/{event_id}")
+            return render_template(
+                "edit_event.html",
+                tags=available_tags,
+                filled=form["filled"],
+                event_id=event_id,
+            )
 
         try:
             events.edit_event(
@@ -231,16 +227,16 @@ def edit_event(event_id):
                 form["tags"],
             )
         except sqlite3.Error:
-            return (
-                render_template(
-                    "message.html",
-                    title="Virhe",
-                    redirect_text="Takaisin",
-                    message="Tuntemattomasta syystä, tapahtumaa ei voitu päivittää tietokantaan.",
-                    redirect=f"/edit/{event_id}",
-                ),
-                500,
+            flash(
+                "!Tuntemattomasta syystä, tapahtumaa ei voitu päivittää tietokantaan."
             )
+            return render_template(
+                "edit_event.html",
+                tags=available_tags,
+                filled=form["filled"],
+                event_id=event_id,
+            )
+
         flash("Tapahtuma päivitetty.")
         return redirect(f"/event/{event_id}")
 
@@ -256,7 +252,7 @@ def delete(event_id):
             render_template(
                 "message.html",
                 title="Virhe",
-                redirect_text="Takaisin",
+                redirect_text="Etusivulle",
                 message="Tapahtuma on poistettu tai sitä ei ole olemassa.",
                 redirect="/",
             ),
@@ -267,7 +263,7 @@ def delete(event_id):
             render_template(
                 "message.html",
                 title="Virhe",
-                redirect_text="Takaisin",
+                redirect_text="Etusivulle",
                 message="Sinulla ei ole oikeuksia poistaa tätä tapahtumaa.",
                 redirect="/",
             ),
@@ -281,16 +277,8 @@ def delete(event_id):
             try:
                 events.delete_event(event_id)
             except sqlite3.Error:
-                return (
-                    render_template(
-                        "message.html",
-                        title="Virhe",
-                        redirect_text="Takaisin",
-                        message="Tuntemattomasta syystä, tapahtumaa ei voitu poistaa.",
-                        redirect=f"/event/{event_id}",
-                    ),
-                    500,
-                )
+                flash("!Tuntemattomasta syystä, tapahtumaa ei voitu poistaa.")
+                redirect(f"/event/{event_id}")
             flash("Tapahtuma poistettu.")
             return redirect("/")
         return redirect("/")
@@ -306,7 +294,7 @@ def event(event_id):
             render_template(
                 "message.html",
                 title="Virhe",
-                redirect_text="Takaisin",
+                redirect_text="Etusivulle",
                 message="Tapahtuma on poistettu tai sitä ei ole olemassa.",
                 redirect="/",
             ),
@@ -332,7 +320,7 @@ def register_to_event(event_id):
             render_template(
                 "message.html",
                 title="Virhe",
-                redirect_text="Takaisin",
+                redirect_text="Etusivulle",
                 message="Tapahtuma on poistettu tai sitä ei ole olemassa.",
                 redirect="/",
             ),
@@ -340,16 +328,8 @@ def register_to_event(event_id):
         )
 
     if event["isCanceled"]:
-        return (
-            render_template(
-                "message.html",
-                title="Virhe",
-                redirect_text="Takaisin",
-                message="Tapahtuma on peruttu.",
-                redirect=f"/event/{event_id}",
-            ),
-            400,
-        )
+        flash("!Tapahtuma on peruttu.")
+        return redirect(f"/event/{event_id}")
 
     if event["spots"] and event["registeredCount"] >= event["spots"]:
         flash("!Tapahtuma on täynnä.")
@@ -370,16 +350,9 @@ def register_to_event(event_id):
             try:
                 events.register_to_event(event_id, session["user_id"])
             except sqlite3.Error:
-                return (
-                    render_template(
-                        "message.html",
-                        title="Virhe",
-                        redirect_text="Takaisin",
-                        message="Tuntemattomasta syystä, ilmoittautuminen ei onnistunut.",
-                        redirect=f"/event/{event_id}",
-                    ),
-                    500,
-                )
+                flash("!Tuntemattomasta syystä, ilmoittautuminen ei onnistunut.")
+                return redirect(f"/event/{event_id}")
+
             flash("Ilmoittautuminen onnistui.")
             return redirect(f"/event/{event_id}")
         if "cancel" in request.form:
@@ -397,7 +370,7 @@ def unregister_from_event(event_id):
             render_template(
                 "message.html",
                 title="Virhe",
-                redirect_text="Takaisin",
+                redirect_text="Etusivulle",
                 message="Tapahtuma on poistettu tai sitä ei ole olemassa.",
                 redirect="/",
             ),
@@ -405,16 +378,8 @@ def unregister_from_event(event_id):
         )
 
     if not events.is_event_participant(event_id, session["user_id"]):
-        return (
-            render_template(
-                "message.html",
-                title="Virhe",
-                redirect_text="Takaisin",
-                message="Et ole rekisteröitynyt tapahtumaan.",
-                redirect=f"/event/{event_id}",
-            ),
-            400,
-        )
+        flash("!Et ole ilmoittautunut tapahtumaan.")
+        return redirect(f"/event/{event_id}")
 
     if request.method == "GET":
         return render_template(
@@ -427,16 +392,11 @@ def unregister_from_event(event_id):
             try:
                 events.unregister_from_event(event_id, session["user_id"])
             except sqlite3.Error:
-                return (
-                    render_template(
-                        "message.html",
-                        title="Virhe",
-                        redirect_text="Takaisin",
-                        message="Tuntemattomasta syystä, peruminen ei onnistunut.",
-                        redirect=f"/event/{event_id}",
-                    ),
-                    500,
+                flash(
+                    "!Tuntemattomasta syystä, ilmoittautumisen peruminen ei onnistunut."
                 )
+                return redirect(f"/event/{event_id}")
+
             flash("Ilmoittautuminen peruttu.")
             return redirect(f"/event/{event_id}")
         if "cancel" in request.form:
@@ -453,7 +413,7 @@ def user(user_id):
             render_template(
                 "message.html",
                 title="Virhe",
-                redirect_text="Takaisin",
+                redirect_text="Etusivulle",
                 message="Käyttäjää ei löydy.",
                 redirect="/",
             ),
@@ -489,7 +449,7 @@ def cancel_event(event_id):
             render_template(
                 "message.html",
                 title="Virhe",
-                redirect_text="Takaisin",
+                redirect_text="Etusivulle",
                 message="Tapahtuma on poistettu tai sitä ei ole olemassa.",
                 redirect="/",
             ),
@@ -501,7 +461,7 @@ def cancel_event(event_id):
             render_template(
                 "message.html",
                 title="Virhe",
-                redirect_text="Takaisin",
+                redirect_text="Etusivulle",
                 message="Sinulla ei ole oikeutta perua tätä tapahtumaa.",
                 redirect="/",
             ),
@@ -519,16 +479,9 @@ def cancel_event(event_id):
             try:
                 events.cancel_event(event_id)
             except sqlite3.Error:
-                return (
-                    render_template(
-                        "message.html",
-                        title="Virhe",
-                        redirect_text="Takaisin",
-                        message="Tuntemattomasta syystä, tapahtumaa ei voitu perua.",
-                        redirect=f"/event/{event_id}",
-                    ),
-                    500,
-                )
+                flash("!Tuntemattomasta syystä, tapahtumaa ei voitu perua.")
+                return redirect(f"/event/{event_id}")
+
             flash("Tapahtuma peruttu.")
             return redirect(f"/event/{event_id}")
         if "cancel" in request.form:

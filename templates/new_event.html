@@ -17,9 +17,11 @@
               <label for="{{tag}}">{{tag}}: </label>
               <select name="{{ tag }}" id="{{tag}}">
                 <option value="not_specified">Ei määritelty</option>
-                {% for option in tags[tag] %}
+                {% for option in tags[tag] %} {% if option == filled.tags[tag] %}
+                <option selected value="{{ option }}">{{ option }}</option>
+                {% else %}
                 <option value="{{ option }}">{{ option }}</option>
-                {% endfor %}
+                {% endif %} {% endfor %}
               </select>
             </div>
             {% endfor %}
@@ -36,7 +38,9 @@
               required
               rows="1"
               name="title"
-              id="title"></textarea>
+              id="title">
+{{filled.title}}</textarea
+            >
           </div>
 
           <div>
@@ -48,37 +52,49 @@
               required
               rows="10"
               name="description"
-              id="description"></textarea>
+              id="description">
+{{filled.description}}</textarea
+            >
           </div>
 
           <div>
             <label for="start_date">Alkupäivämäärä: <span class="form__required">*</span></label>
             <br />
-            <input required type="date" name="start_date" id="start_date" />
+            <input
+              value="{{filled.start_date}}"
+              required
+              type="date"
+              name="start_date"
+              id="start_date" />
           </div>
 
           <div>
             <label for="start_time">Alkuaika: <span class="form__required">*</span></label>
             <br />
-            <input required type="time" name="start_time" id="start_time" />
+            <input
+              value="{{filled.start_time}}"
+              required
+              type="time"
+              name="start_time"
+              id="start_time" />
           </div>
 
           <div>
             <label for="end_date">Loppupäivämäärä: <span class="form__required">*</span></label>
             <br />
-            <input required type="date" name="end_date" id="end_date" />
+            <input value="{{filled.end_date}}" required type="date" name="end_date" id="end_date" />
           </div>
 
           <div>
             <label for="end_time">Loppuaika: <span class="form__required">*</span></label>
             <br />
-            <input required type="time" name="end_time" id="end_time" />
+            <input value="{{filled.end_time}}" required type="time" name="end_time" id="end_time" />
           </div>
 
           <div>
             <label for="spots">Paikkamäärä: </label>
             <br />
-            <input max="9999999" type="number" name="spots" id="spots" />
+            <input value="{{filled.spots}}" max="9999999" type="number" name="spots" id="spots" />
           </div>
 
           <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
