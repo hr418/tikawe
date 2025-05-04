@@ -533,3 +533,8 @@ def search():
                 "tags": event_tags,
             },
         )
+
+
+@app.teardown_appcontext
+def teardown_appcontext(_):
+    db.close_connection()
