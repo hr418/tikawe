@@ -42,7 +42,7 @@
           <p class="pill-list__pill">{{tag}}</p>
           {% endfor %}
         </div>
-        <p class="event-description">{{event.description}}</p>
+        <p class="event-description">{{event.description | show_lines}}</p>
         {% if not event.is_canceled %}
         <p class="event-participants__text">Tapahtumaan Ilmoittautuneet</p>
         {% if participants %}

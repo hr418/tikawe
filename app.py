@@ -1,6 +1,7 @@
 import sqlite3
 from datetime import datetime
 from functools import wraps
+import markupsafe
 from flask import Flask, render_template, request, session, redirect, flash
 import config
 import db
@@ -10,6 +11,13 @@ import tags
 
 app = Flask(__name__)
 app.secret_key = config.SECRET_KEY
+
+
+@app.template_filter()
+def show_lines(content):
+    content = str(markupsafe.escape(content))
+    content = content.replace("\n", "<br />")
+    return markupsafe.Markup(content)
 
 
 def require_login(f):
@@ -506,11 +514,6 @@ def search():
             value = request.args.get(tag)
             if value:
                 event_tags[tag] = value
-
-        print("title", title)
-        print("start_date_start", start_date_start)
-        print("start_date_end", start_date_end)
-        print("event_tags", event_tags)
 
         events_list = events.search_events(
             title,
