@@ -34,8 +34,11 @@
               <label for="{{tag}}">{{tag}}: </label>
               <select name="{{ tag }}" id="{{tag}}">
                 <option value>Ei valintaa</option>
+                {% if filled.tags[tag] == "not_specified" %}
+                <option selected value="not_specified">Ei määritelty</option>
+                {% else %}
                 <option value="not_specified">Ei määritelty</option>
-                {% for option in tags[tag] %} {% if option == filled.tags[tag] %}
+                {% endif %} {% for option in tags[tag] %} {% if option == filled.tags[tag] %}
                 <option selected value="{{ option }}">{{ option }}</option>
                 {% else %}
                 <option value="{{ option }}">{{ option }}</option>
