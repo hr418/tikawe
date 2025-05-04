@@ -18,7 +18,7 @@ def get_user(user_id):
 
     sql = """SELECT COUNT(e.id) AS event_count, IFNULL(SUM(e.registeredCount), 0) AS total_participants
              FROM Events e
-             WHERE e.user = ? AND e.start >= ?"""
+             WHERE e.user = ? AND e.start >= ? AND e.isCanceled = 0"""
     statistics = db.query(sql, [user_id, int(datetime.now().timestamp())])[0]
 
     account_age = math.floor(
