@@ -109,6 +109,59 @@ def delete_event(event_id):
     db.execute(sql, [event_id])
 
 
+def search_events(
+    title,
+    start_date_start,
+    start_date_end,
+    tags,
+):
+    sql = """SELECT e.id, e.title, e.description, e.start, e.end, e.spots, e.registeredCount, e.isCanceled, u.username, u.id AS user_id
+             FROM Events e, Users u
+             WHERE e.user = u.id"""
+    params = []
+
+    if title:
+        sql += " AND e.title LIKE ?"
+        params.append(f"%{title}%")
+
+    if start_date_start:
+        sql += " AND e.start >= ?"
+        params.append(int(datetime.strptime(start_date_start, "%Y-%m-%d").timestamp()))
+
+    if start_date_end:
+        sql += " AND e.start <= ?"
+        params.append(
+            int(datetime.strptime(start_date_end, "%Y-%m-%d").timestamp()) + 86400
+        )
+        # Add 1 day (86400 s) to include the end date
+
+    if tags:
+        not_specified = {}
+        specified = {}
+
+        for tag, value in tags.items():
+            if value == "not_specified":
+                not_specified[tag] = value
+            else:
+                specified[tag] = value
+
+        if specified:
+            for tag, value in specified.items():
+                sql += " AND EXISTS (SELECT * FROM EventTags t WHERE t.event = e.id AND t.title = ? AND t.value = ?)"
+                params.append(tag)
+                params.append(value)
+
+        if not_specified:
+            for tag, value in not_specified.items():
+                sql += " AND NOT EXISTS (SELECT * FROM EventTags t WHERE t.event = e.id AND t.title = ?)"
+                params.append(tag)
+
+    sql += " ORDER BY e.start"
+
+    result = db.query(sql, params)
+    return result if result else []
+
+
 # Formats event attributes for display
 def format_event_display(event):
     start = datetime.fromtimestamp(event["start"])

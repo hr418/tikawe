@@ -267,3 +267,19 @@ body {
   margin-top: 1rem;
   color: #b00020;
 }
+
+.search-form-container {
+  background-color: #f6f6f6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-grow: 1;
+  width: 100%;
+}
+
+.search-form-container .form {
+  max-width: 50rem;
+  width: 100%;
+  padding: 1rem;
+  padding-bottom: 0;
+}

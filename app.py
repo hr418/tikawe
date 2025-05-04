@@ -486,3 +486,47 @@ def cancel_event(event_id):
             return redirect(f"/event/{event_id}")
         if "cancel" in request.form:
             return redirect(f"/event/{event_id}")
+
+
+@app.route("/search", methods=["GET"])
+@require_login
+def search():
+    if request.method == "GET":
+        available_tags = tags.get_tags()
+
+        title = request.args.get("title")
+        title = title if title else ""
+        start_date_start = request.args.get("start_date_start")
+        start_date_start = start_date_start if start_date_start else ""
+        start_date_end = request.args.get("start_date_end")
+        start_date_end = start_date_end if start_date_end else ""
+        event_tags = {}
+
+        for tag in available_tags:
+            value = request.args.get(tag)
+            if value:
+                event_tags[tag] = value
+
+        print("title", title)
+        print("start_date_start", start_date_start)
+        print("start_date_end", start_date_end)
+        print("event_tags", event_tags)
+
+        events_list = events.search_events(
+            title,
+            start_date_start,
+            start_date_end,
+            event_tags,
+        )
+
+        return render_template(
+            "search.html",
+            events=list(map(events.format_event_display, events_list)),
+            tags=available_tags,
+            filled={
+                "title": title,
+                "start_date_start": start_date_start,
+                "start_date_end": start_date_end,
+                "tags": event_tags,
+            },
+        )
